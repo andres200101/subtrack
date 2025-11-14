@@ -232,6 +232,7 @@
             const [editingId, setEditingId] = useState(null);
             const [showSavingsModal, setShowSavingsModal] = useState(false);
             const [showChartsModal, setShowChartsModal] = useState(false);
+            const [showWrappedModal, setShowWrappedModal] = useState(false);
             const [formData, setFormData] = useState({
                 name: '',
                 cost: '',
@@ -632,6 +633,97 @@
                 if (!dateString) return 'Not set';
                 const date = new Date(dateString);
                 return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            };
+
+            // Calculate Wrapped Stats
+            const calculateWrappedStats = () => {
+                const currentYear = new Date().getFullYear();
+                const allSubs = [...subscriptions, ...cancelledSubscriptions];
+                
+                // Total spent this year
+                const yearlySpent = totalYearly;
+                
+                // Total saved from cancellations
+                const totalSaved = calculateSavings().yearly;
+                
+                // Most expensive subscription
+                const mostExpensive = allSubs.reduce((max, sub) => {
+                    const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+                    const maxCost = max ? calculateMonthlyEquivalent(parseFloat(max.cost), max.billing_cycle) : 0;
+                    return monthlyCost > maxCost ? sub : max;
+                }, null);
+                
+                // Biggest category
+                const categoryData = getCategoryData();
+                const biggestCategory = Object.entries(categoryData).sort((a, b) => b[1] - a[1])[0];
+                
+                // Subscriptions added this year
+                const subsAddedThisYear = allSubs.length;
+                
+                // Subscriptions cancelled this year
+                const subsCancelledThisYear = cancelledSubscriptions.length;
+                
+                // Average monthly cost
+                const avgMonthly = totalMonthly / (subscriptions.length || 1);
+                
+                // Trials managed
+                const trialsManaged = allSubs.filter(sub => sub.type === 'trial').length;
+                
+                // Money wasted on forgotten subs (cancelled after 3+ months)
+                const moneyWasted = cancelledSubscriptions.reduce((sum, sub) => {
+                    if (sub.cancelled_date) {
+                        const cancelDate = new Date(sub.cancelled_date);
+                        const monthsActive = 3; // Assume average
+                        return sum + (calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle) * monthsActive);
+                    }
+                    return sum;
+                }, 0);
+                
+                // Get personality type
+                let personalityType = '';
+                let personalityDesc = '';
+                let personalityEmoji = '';
+                
+                if (subsCancelledThisYear > subsAddedThisYear) {
+                    personalityType = 'The Minimalist';
+                    personalityDesc = "You're ruthless with subscriptions - cutting what you don't need!";
+                    personalityEmoji = '✂️';
+                } else if (trialsManaged > 3) {
+                    personalityType = 'The Trial Hunter';
+                    personalityDesc = "You love free trials and know exactly when to cancel!";
+                    personalityEmoji = '🎁';
+                } else if (subscriptions.length > 10) {
+                    personalityType = 'The Collector';
+                    personalityDesc = "You love variety and have a subscription for everything!";
+                    personalityEmoji = '🎨';
+                } else if (totalSaved > yearlySpent * 0.3) {
+                    personalityType = 'The Saver';
+                    personalityDesc = "You've saved more than you spend - financial guru!";
+                    personalityEmoji = '💰';
+                } else {
+                    personalityType = 'The Balanced';
+                    personalityDesc = "You keep just the right amount of subscriptions!";
+                    personalityEmoji = '⚖️';
+                }
+                
+                return {
+                    year: currentYear,
+                    yearlySpent,
+                    totalSaved,
+                    mostExpensive,
+                    biggestCategory: biggestCategory ? biggestCategory[0] : 'None',
+                    categoryAmount: biggestCategory ? biggestCategory[1] : 0,
+                    subsAddedThisYear,
+                    subsCancelledThisYear,
+                    avgMonthly,
+                    trialsManaged,
+                    moneyWasted,
+                    personalityType,
+                    personalityDesc,
+                    personalityEmoji,
+                    totalSubsManaged: allSubs.length,
+                    activeNow: subscriptions.length
+                };
             };
 
             // Config Modal
@@ -1040,13 +1132,23 @@
 
                         {/* Charts and Insights Button */}
                         {subscriptions.length > 0 && (
-                            <div className="mb-6">
+                            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button
                                     onClick={() => setShowChartsModal(true)}
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-white rounded-xl border-2 border-brand-blue/20 hover:border-brand-blue hover:shadow-md transition-all text-brand-blue font-semibold"
+                                    className="flex items-center justify-center gap-2 px-6 py-4 bg-white rounded-xl border-2 border-brand-blue/20 hover:border-brand-blue hover:shadow-md transition-all text-brand-blue font-semibold"
                                 >
                                     <PieChart size={20} />
                                     View Spending Analytics
+                                </button>
+                                
+                                <button
+                                    onClick={() => setShowWrappedModal(true)}
+                                    className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-xl transition-all font-semibold relative overflow-hidden group"
+                                >
+                                    <span className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                    <span className="relative flex items-center gap-2">
+                                        🎊 Your 2024 Wrapped
+                                    </span>
                                 </button>
                             </div>
                         )}
@@ -1308,6 +1410,153 @@
                                 </div>
                             </div>
                         )}
+
+                        {/* Wrapped Modal */}
+                        {showWrappedModal && (() => {
+                            const wrapped = calculateWrappedStats();
+                            return (
+                                <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={() => setShowWrappedModal(false)}>
+                                    <div className="bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 rounded-3xl p-1 max-w-2xl w-full shadow-2xl my-8" onClick={(e) => e.stopPropagation()}>
+                                        <div className="bg-white rounded-3xl p-8 space-y-6 max-h-[85vh] overflow-y-auto">
+                                            {/* Header */}
+                                            <div className="text-center">
+                                                <div className="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full text-sm font-bold mb-4">
+                                                    SubTrack Wrapped
+                                                </div>
+                                                <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+                                                    Your {wrapped.year}
+                                                </h1>
+                                                <p className="text-gray-600 text-lg">A year of subscriptions in review</p>
+                                            </div>
+
+                                            {/* Personality Type */}
+                                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 text-center">
+                                                <div className="text-6xl mb-3">{wrapped.personalityEmoji}</div>
+                                                <h2 className="text-2xl font-bold text-purple-900 mb-2">{wrapped.personalityType}</h2>
+                                                <p className="text-purple-700">{wrapped.personalityDesc}</p>
+                                            </div>
+
+                                            {/* Big Numbers */}
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border-2 border-orange-200 text-center">
+                                                    <p className="text-sm text-orange-700 font-semibold mb-2">Total Spent</p>
+                                                    <p className="text-4xl font-black text-orange-600">${wrapped.yearlySpent.toFixed(0)}</p>
+                                                    <p className="text-xs text-orange-600 mt-1">this year</p>
+                                                </div>
+
+                                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 text-center">
+                                                    <p className="text-sm text-green-700 font-semibold mb-2">Total Saved</p>
+                                                    <p className="text-4xl font-black text-green-600">${wrapped.totalSaved.toFixed(0)}</p>
+                                                    <p className="text-xs text-green-600 mt-1">by canceling</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Most Expensive */}
+                                            {wrapped.mostExpensive && (
+                                                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-300">
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-sm text-yellow-700 font-semibold mb-1">💎 Your Priciest Sub</p>
+                                                            <p className="text-2xl font-bold text-yellow-900">{wrapped.mostExpensive.name}</p>
+                                                            <p className="text-yellow-700">${wrapped.mostExpensive.cost}/{wrapped.mostExpensive.billing_cycle}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-3xl font-black text-yellow-600">
+                                                                ${(calculateMonthlyEquivalent(parseFloat(wrapped.mostExpensive.cost), wrapped.mostExpensive.billing_cycle) * 12).toFixed(0)}
+                                                            </p>
+                                                            <p className="text-xs text-yellow-600">per year</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Category Champion */}
+                                            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
+                                                <p className="text-sm text-blue-700 font-semibold mb-2">🏆 Category Champion</p>
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-2xl font-bold text-blue-900">{wrapped.biggestCategory}</p>
+                                                    <p className="text-3xl font-black text-blue-600">${wrapped.categoryAmount.toFixed(0)}/mo</p>
+                                                </div>
+                                                <p className="text-xs text-blue-600 mt-2">Your biggest spending category</p>
+                                            </div>
+
+                                            {/* Stats Grid */}
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                <div className="bg-purple-50 rounded-lg p-4 text-center border border-purple-200">
+                                                    <p className="text-2xl font-bold text-purple-600">{wrapped.totalSubsManaged}</p>
+                                                    <p className="text-xs text-purple-700 mt-1">Subs Managed</p>
+                                                </div>
+                                                <div className="bg-pink-50 rounded-lg p-4 text-center border border-pink-200">
+                                                    <p className="text-2xl font-bold text-pink-600">{wrapped.subsCancelledThisYear}</p>
+                                                    <p className="text-xs text-pink-700 mt-1">Cancelled</p>
+                                                </div>
+                                                <div className="bg-orange-50 rounded-lg p-4 text-center border border-orange-200">
+                                                    <p className="text-2xl font-bold text-orange-600">{wrapped.trialsManaged}</p>
+                                                    <p className="text-xs text-orange-700 mt-1">Trials</p>
+                                                </div>
+                                                <div className="bg-blue-50 rounded-lg p-4 text-center border border-blue-200">
+                                                    <p className="text-2xl font-bold text-blue-600">${wrapped.avgMonthly.toFixed(0)}</p>
+                                                    <p className="text-xs text-blue-700 mt-1">Avg/Sub</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Money Wasted Alert */}
+                                            {wrapped.moneyWasted > 0 && (
+                                                <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-6 border-2 border-red-200">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-4xl">⚠️</div>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm text-red-700 font-semibold mb-1">Money Left on the Table</p>
+                                                            <p className="text-red-900">You paid <span className="text-2xl font-bold text-red-600">${wrapped.moneyWasted.toFixed(0)}</span> for subs you eventually cancelled</p>
+                                                            <p className="text-xs text-red-600 mt-2">💡 Cancel sooner next time to save more!</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Looking Ahead */}
+                                            <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-6 border-2 border-green-200 text-center">
+                                                <p className="text-2xl font-bold text-green-900 mb-2">🎯 Looking Ahead</p>
+                                                <p className="text-green-700 mb-3">
+                                                    If you keep your current {wrapped.activeNow} subscriptions, you'll spend
+                                                </p>
+                                                <p className="text-4xl font-black text-green-600 mb-2">${wrapped.yearlySpent.toFixed(0)}</p>
+                                                <p className="text-green-700">in {wrapped.year + 1}</p>
+                                            </div>
+
+                                            {/* Share Buttons */}
+                                            <div className="space-y-3">
+                                                <button
+                                                    onClick={() => {
+                                                        // Copy wrapped stats as text
+                                                        const text = `🎊 My ${wrapped.year} SubTrack Wrapped!\n\n${wrapped.personalityEmoji} I'm a ${wrapped.personalityType}\n💰 Spent: ${wrapped.yearlySpent.toFixed(0)}\n✅ Saved: ${wrapped.totalSaved.toFixed(0)}\n📊 Managed ${wrapped.totalSubsManaged} subscriptions\n\nTake control of your subscriptions with SubTrack!`;
+                                                        navigator.clipboard.writeText(text);
+                                                        alert('✅ Copied to clipboard! Share your Wrapped!');
+                                                    }}
+                                                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    📋 Copy Stats to Share
+                                                </button>
+                                                
+                                                <button
+                                                    onClick={() => setShowWrappedModal(false)}
+                                                    className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+                                                >
+                                                    Close
+                                                </button>
+                                            </div>
+
+                                            {/* Footer */}
+                                            <div className="text-center pt-4 border-t">
+                                                <p className="text-xs text-gray-500">
+                                                    Made with SubTrack • Share your Wrapped and tag us!
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Charts Modal */}
                         {showChartsModal && (
