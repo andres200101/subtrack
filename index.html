@@ -43,6 +43,20 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(242, 123, 64, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(242, 123, 64, 0.6); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes countdown {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        .trial-badge {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        }
     </style>
 </head>
 <body class="bg-brand-bg">
@@ -54,7 +68,7 @@
         // CONFIGURATION
         const LEMONSQUEEZY_CHECKOUT_URL = 'https://subtrack.lemonsqueezy.com/buy/7b297b95-d09c-48c1-85a5-c53e94eaa386';
         
-        // Logo Component - now uses actual image files
+        // Logo Component
         const Logo = ({ variant = 'full', size = 40, className = '' }) => {
             const images = {
                 iso: '/images/logo-iso.png',
@@ -94,6 +108,10 @@
         const Zap = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
         const PieChart = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>;
         const TrendingDown = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>;
+        const Clock = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const AlertCircle = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+        const Gift = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>;
+        const Bell = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
 
         // Supabase client setup
         const createSupabaseClient = (url, key) => {
@@ -221,7 +239,9 @@
                 category: 'Streaming',
                 next_billing_date: '',
                 description: '',
-                status: 'active'
+                status: 'active',
+                type: 'subscription',
+                trial_end_date: ''
             });
 
             useEffect(() => {
@@ -253,7 +273,6 @@
             useEffect(() => {
                 if (showChartsModal && subscriptions.length > 0) {
                     setTimeout(() => {
-                        // Category Chart
                         const categoryCtx = document.getElementById('categoryChart');
                         if (categoryCtx) {
                             const categoryData = getCategoryData();
@@ -290,7 +309,6 @@
                             });
                         }
 
-                        // Billing Cycle Chart
                         const billingCtx = document.getElementById('billingChart');
                         if (billingCtx) {
                             const billingData = {};
@@ -471,12 +489,40 @@
             const totalYearly = totalMonthly * 12;
             const canAddMore = isPro || (Array.isArray(subscriptions) ? subscriptions.length < 5 : true);
 
+            // Get trials
+            const trials = subscriptions.filter(sub => sub.type === 'trial');
+            const regularSubs = subscriptions.filter(sub => sub.type !== 'trial');
+
+            // Calculate days remaining for trial
+            const getDaysRemaining = (trialEndDate) => {
+                if (!trialEndDate) return 0;
+                const end = new Date(trialEndDate);
+                const now = new Date();
+                const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+                return Math.max(0, diff);
+            };
+
+            // Get urgency level
+            const getUrgencyLevel = (daysRemaining) => {
+                if (daysRemaining <= 1) return 'critical';
+                if (daysRemaining <= 3) return 'high';
+                if (daysRemaining <= 7) return 'medium';
+                return 'low';
+            };
+
             const handleSubmit = async () => {
                 if (!formData.name || !formData.cost) return;
                 if (!canAddMore && !editingId) {
                     alert('Free tier limited to 5 subscriptions. Upgrade to Pro for unlimited!');
                     return;
                 }
+                
+                // Validate trial end date if type is trial
+                if (formData.type === 'trial' && !formData.trial_end_date) {
+                    alert('Please set a trial end date');
+                    return;
+                }
+                
                 setLoading(true);
                 if (editingId) {
                     await supabase.from('subscriptions').update(formData).eq('id', editingId);
@@ -485,7 +531,7 @@
                     await supabase.from('subscriptions').insert({ ...formData, user_id: user.id, status: 'active' });
                 }
                 await loadSubscriptions();
-                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active' });
+                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription', trial_end_date: '' });
                 setShowForm(false);
                 setLoading(false);
             };
@@ -498,7 +544,9 @@
                     category: sub.category,
                     next_billing_date: sub.next_billing_date || '',
                     description: sub.description || '',
-                    status: sub.status || 'active'
+                    status: sub.status || 'active',
+                    type: sub.type || 'subscription',
+                    trial_end_date: sub.trial_end_date || ''
                 });
                 setEditingId(sub.id);
                 setShowForm(true);
@@ -523,8 +571,21 @@
                 }
             };
 
+            const handleConvertToSubscription = async (trial) => {
+                if (confirm(`Convert ${trial.name} to a paid subscription?`)) {
+                    setLoading(true);
+                    await supabase.from('subscriptions').update({ 
+                        type: 'subscription',
+                        trial_end_date: null,
+                        next_billing_date: new Date().toISOString().split('T')[0]
+                    }).eq('id', trial.id);
+                    await loadSubscriptions();
+                    setLoading(false);
+                }
+            };
+
             const handleCancel = () => {
-                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active' });
+                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription', trial_end_date: '' });
                 setEditingId(null);
                 setShowForm(false);
             };
@@ -739,6 +800,157 @@
                             </div>
                         </div>
 
+                        {/* TRIAL MANAGEMENT SECTION - Prominent Alert */}
+                        {trials.length > 0 && (
+                            <div className="mb-6">
+                                {trials.filter(t => getDaysRemaining(t.trial_end_date) <= 3).length > 0 && (
+                                    <div className="mb-4 p-5 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-xl pulse-glow">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-3 bg-red-100 rounded-full">
+                                                <AlertCircle className="text-red-600" size={28} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-bold text-red-900 mb-2 flex items-center gap-2">
+                                                    <Bell size={20} />
+                                                    Urgent: Trials Ending Soon!
+                                                </h3>
+                                                <p className="text-red-800 mb-3">
+                                                    You have {trials.filter(t => getDaysRemaining(t.trial_end_date) <= 3).length} trial{trials.filter(t => getDaysRemaining(t.trial_end_date) <= 3).length > 1 ? 's' : ''} ending within 3 days. 
+                                                    Cancel now to avoid charges!
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {trials.filter(t => getDaysRemaining(t.trial_end_date) <= 3).map(trial => (
+                                                        <span key={trial.id} className="px-3 py-1 bg-red-600 text-white rounded-full text-sm font-semibold">
+                                                            {trial.name} - {getDaysRemaining(trial.trial_end_date)} day{getDaysRemaining(trial.trial_end_date) !== 1 ? 's' : ''} left
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-300 overflow-hidden">
+                                    <div className="p-6 bg-white/50 backdrop-blur-sm border-b-2 border-yellow-200">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-3 trial-badge rounded-xl shadow-lg">
+                                                    <Gift className="text-white" size={28} />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-2xl font-bold text-brand-text flex items-center gap-2">
+                                                        Free Trials Manager
+                                                        <span className="px-3 py-1 bg-yellow-400 text-yellow-900 text-xs rounded-full font-bold">
+                                                            {trials.length} Active
+                                                        </span>
+                                                    </h2>
+                                                    <p className="text-gray-600">Never forget to cancel a free trial again</p>
+                                                </div>
+                                            </div>
+                                            <Clock className="text-yellow-600" size={32} />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 space-y-4">
+                                        {trials.sort((a, b) => getDaysRemaining(a.trial_end_date) - getDaysRemaining(b.trial_end_date)).map(trial => {
+                                            const daysLeft = getDaysRemaining(trial.trial_end_date);
+                                            const urgency = getUrgencyLevel(daysLeft);
+                                            const urgencyColors = {
+                                                critical: 'from-red-500 to-red-600 border-red-600',
+                                                high: 'from-orange-500 to-orange-600 border-orange-600',
+                                                medium: 'from-yellow-500 to-yellow-600 border-yellow-600',
+                                                low: 'from-green-500 to-green-600 border-green-600'
+                                            };
+                                            const urgencyBg = {
+                                                critical: 'bg-red-50 border-red-200',
+                                                high: 'bg-orange-50 border-orange-200',
+                                                medium: 'bg-yellow-50 border-yellow-200',
+                                                low: 'bg-green-50 border-green-200'
+                                            };
+
+                                            return (
+                                                <div key={trial.id} className={`${urgencyBg[urgency]} border-2 rounded-xl p-5 hover:shadow-lg transition-all`}>
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <h3 className="text-xl font-bold text-brand-text">{trial.name}</h3>
+                                                                <span className={`px-3 py-1 bg-gradient-to-r ${urgencyColors[urgency]} text-white text-xs rounded-full font-bold shadow-md`}>
+                                                                    FREE TRIAL
+                                                                </span>
+                                                                <span className="px-2.5 py-1 bg-brand-turquoise/10 text-brand-turquoise text-xs rounded-full font-medium">
+                                                                    {trial.category}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-gray-700 font-medium mb-1">
+                                                                Will cost <span className="text-lg font-bold text-brand-orange">${trial.cost}</span>/{trial.billing_cycle} after trial
+                                                            </p>
+                                                            {trial.description && (
+                                                                <p className="text-sm text-gray-600">{trial.description}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Countdown Timer */}
+                                                    <div className="mb-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                                                <Clock size={16} />
+                                                                Trial ends {formatDate(trial.trial_end_date)}
+                                                            </span>
+                                                            <span className={`text-2xl font-bold ${urgency === 'critical' ? 'text-red-600' : urgency === 'high' ? 'text-orange-600' : urgency === 'medium' ? 'text-yellow-600' : 'text-green-600'}`}>
+                                                                {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                                            <div 
+                                                                className={`h-full bg-gradient-to-r ${urgencyColors[urgency]} transition-all duration-500`}
+                                                                style={{ width: `${Math.max(5, (daysLeft / 30) * 100)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Action Buttons */}
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <button
+                                                            onClick={() => handleCancelSubscription(trial)}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold shadow-md"
+                                                        >
+                                                            <X size={18} />
+                                                            Cancel Before Charged
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleConvertToSubscription(trial)}
+                                                            className="flex items-center gap-2 px-4 py-2 gradient-blue text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+                                                        >
+                                                            <DollarSign size={18} />
+                                                            Keep & Convert to Paid
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(trial)}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold"
+                                                        >
+                                                            <Edit2 size={18} />
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Cancel%20${encodeURIComponent(trial.name)}%20Trial&dates=${trial.trial_end_date.replace(/-/g, '')}/${trial.trial_end_date.replace(/-/g, '')}&details=Remember%20to%20cancel%20before%20being%20charged`;
+                                                                window.open(calendarUrl, '_blank');
+                                                            }}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-brand-turquoise/10 border-2 border-brand-turquoise text-brand-turquoise rounded-lg hover:bg-brand-turquoise/20 transition-all font-semibold"
+                                                        >
+                                                            <Calendar size={18} />
+                                                            Add Reminder
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Free tier warning */}
                         {!isPro && subscriptions.length >= 5 && (
                             <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl flex items-start gap-3">
@@ -879,12 +1091,36 @@
                                                 <option key={cat} value={cat}>{cat}</option>
                                             ))}
                                         </select>
-                                        <input
-                                            type="date"
-                                            value={formData.next_billing_date}
-                                            onChange={(e) => setFormData({...formData, next_billing_date: e.target.value})}
+                                        
+                                        {/* Type Selection */}
+                                        <select
+                                            value={formData.type}
+                                            onChange={(e) => setFormData({...formData, type: e.target.value})}
                                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
-                                        />
+                                        >
+                                            <option value="subscription">Paid Subscription</option>
+                                            <option value="trial">Free Trial</option>
+                                        </select>
+
+                                        {/* Conditional Date Fields */}
+                                        {formData.type === 'trial' ? (
+                                            <input
+                                                type="date"
+                                                value={formData.trial_end_date}
+                                                onChange={(e) => setFormData({...formData, trial_end_date: e.target.value})}
+                                                placeholder="Trial End Date"
+                                                className="px-4 py-3 border-2 border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-yellow-50"
+                                            />
+                                        ) : (
+                                            <input
+                                                type="date"
+                                                value={formData.next_billing_date}
+                                                onChange={(e) => setFormData({...formData, next_billing_date: e.target.value})}
+                                                placeholder="Next Billing Date"
+                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                            />
+                                        )}
+                                        
                                         <input
                                             type="text"
                                             placeholder="Description (optional)"
@@ -893,6 +1129,15 @@
                                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
                                         />
                                     </div>
+
+                                    {formData.type === 'trial' && (
+                                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+                                            <p className="text-sm text-yellow-800 flex items-center gap-2">
+                                                <AlertCircle size={16} />
+                                                <strong>Free Trial:</strong> We'll remind you before it ends so you don't get charged!
+                                            </p>
+                                        </div>
+                                    )}
                                     
                                     <div className="flex gap-3 mt-5">
                                         <button
@@ -900,7 +1145,7 @@
                                             disabled={loading}
                                             className="flex-1 gradient-orange text-white px-4 py-3 rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50"
                                         >
-                                            {loading ? 'Saving...' : editingId ? 'Update' : 'Add'} Subscription
+                                            {loading ? 'Saving...' : editingId ? 'Update' : 'Add'} {formData.type === 'trial' ? 'Trial' : 'Subscription'}
                                         </button>
                                         <button
                                             onClick={handleCancel}
@@ -931,10 +1176,10 @@
                                 </div>
                             )}
 
-                            {/* Subscriptions List */}
-                            {subscriptions.length > 0 && (
+                            {/* Regular Subscriptions List */}
+                            {regularSubs.length > 0 && (
                                 <div className="space-y-3">
-                                    {subscriptions.map(sub => (
+                                    {regularSubs.map(sub => (
                                         <div key={sub.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-1">
