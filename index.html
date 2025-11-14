@@ -43,6 +43,13 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(242, 123, 64, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(242, 123, 64, 0.6); }
+        }
+        .trial-alert {
+            animation: pulse-glow 2s infinite;
+        }
     </style>
 </head>
 <body class="bg-brand-bg">
@@ -54,7 +61,26 @@
         // CONFIGURATION
         const LEMONSQUEEZY_CHECKOUT_URL = 'https://subtrack.lemonsqueezy.com/buy/7b297b95-d09c-48c1-85a5-c53e94eaa386';
         
-        // Logo Component - now uses actual image files
+        // POPULAR SERVICE TEMPLATES
+        const SERVICE_TEMPLATES = [
+            { name: 'Netflix', cost: 15.99, billing_cycle: 'Monthly', category: 'Streaming', icon: '🎬' },
+            { name: 'Spotify', cost: 10.99, billing_cycle: 'Monthly', category: 'Music', icon: '🎵' },
+            { name: 'Disney+', cost: 7.99, billing_cycle: 'Monthly', category: 'Streaming', icon: '🏰' },
+            { name: 'Apple Music', cost: 10.99, billing_cycle: 'Monthly', category: 'Music', icon: '🎧' },
+            { name: 'YouTube Premium', cost: 13.99, billing_cycle: 'Monthly', category: 'Streaming', icon: '📺' },
+            { name: 'Amazon Prime', cost: 14.99, billing_cycle: 'Monthly', category: 'Streaming', icon: '📦' },
+            { name: 'HBO Max', cost: 15.99, billing_cycle: 'Monthly', category: 'Streaming', icon: '🎭' },
+            { name: 'Hulu', cost: 7.99, billing_cycle: 'Monthly', category: 'Streaming', icon: '📹' },
+            { name: 'Adobe Creative Cloud', cost: 54.99, billing_cycle: 'Monthly', category: 'Software', icon: '🎨' },
+            { name: 'Microsoft 365', cost: 9.99, billing_cycle: 'Monthly', category: 'Software', icon: '💼' },
+            { name: 'Dropbox', cost: 11.99, billing_cycle: 'Monthly', category: 'Cloud Storage', icon: '☁️' },
+            { name: 'iCloud+', cost: 2.99, billing_cycle: 'Monthly', category: 'Cloud Storage', icon: '☁️' },
+            { name: 'ChatGPT Plus', cost: 20.00, billing_cycle: 'Monthly', category: 'Software', icon: '🤖' },
+            { name: 'GitHub Copilot', cost: 10.00, billing_cycle: 'Monthly', category: 'Software', icon: '👨‍💻' },
+            { name: 'Notion', cost: 10.00, billing_cycle: 'Monthly', category: 'Software', icon: '📝' },
+        ];
+
+        // Logo Component
         const Logo = ({ variant = 'full', size = 40, className = '' }) => {
             const images = {
                 iso: '/images/logo-iso.png',
@@ -94,6 +120,11 @@
         const Zap = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
         const PieChart = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>;
         const TrendingDown = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>;
+        const Lightbulb = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>;
+        const AlertCircle = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+        const Clock = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const Gift = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>;
+        const Search = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>;
 
         // Supabase client setup
         const createSupabaseClient = (url, key) => {
@@ -208,9 +239,14 @@
             const [password, setPassword] = useState('');
             
             const [subscriptions, setSubscriptions] = useState([]);
+            const [freeTrials, setFreeTrials] = useState([]);
             const [cancelledSubscriptions, setCancelledSubscriptions] = useState([]);
             const [loading, setLoading] = useState(false);
             const [showForm, setShowForm] = useState(false);
+            const [showTrialForm, setShowTrialForm] = useState(false);
+            const [showTemplates, setShowTemplates] = useState(false);
+            const [showInsights, setShowInsights] = useState(false);
+            const [templateSearch, setTemplateSearch] = useState('');
             const [editingId, setEditingId] = useState(null);
             const [showSavingsModal, setShowSavingsModal] = useState(false);
             const [showChartsModal, setShowChartsModal] = useState(false);
@@ -221,7 +257,18 @@
                 category: 'Streaming',
                 next_billing_date: '',
                 description: '',
-                status: 'active'
+                status: 'active',
+                type: 'subscription' // 'subscription' or 'trial'
+            });
+            const [trialFormData, setTrialFormData] = useState({
+                name: '',
+                cost: '',
+                billing_cycle: 'Monthly',
+                category: 'Streaming',
+                trial_end_date: '',
+                description: '',
+                status: 'trial',
+                type: 'trial'
             });
 
             useEffect(() => {
@@ -253,7 +300,6 @@
             useEffect(() => {
                 if (showChartsModal && subscriptions.length > 0) {
                     setTimeout(() => {
-                        // Category Chart
                         const categoryCtx = document.getElementById('categoryChart');
                         if (categoryCtx) {
                             const categoryData = getCategoryData();
@@ -290,7 +336,6 @@
                             });
                         }
 
-                        // Billing Cycle Chart
                         const billingCtx = document.getElementById('billingChart');
                         if (billingCtx) {
                             const billingData = {};
@@ -421,6 +466,7 @@
                 localStorage.removeItem('supabase_session');
                 setUser(null);
                 setSubscriptions([]);
+                setFreeTrials([]);
                 setIsPro(false);
             };
 
@@ -445,16 +491,20 @@
                 try {
                     const { data, error } = await supabase.from('subscriptions').select('*');
                     if (!error && data) {
-                        const active = data.filter(sub => sub.status !== 'cancelled');
+                        const active = data.filter(sub => sub.status === 'active' && sub.type !== 'trial');
+                        const trials = data.filter(sub => sub.type === 'trial' && sub.status !== 'cancelled');
                         const cancelled = data.filter(sub => sub.status === 'cancelled');
                         setSubscriptions(Array.isArray(active) ? active : []);
+                        setFreeTrials(Array.isArray(trials) ? trials : []);
                         setCancelledSubscriptions(Array.isArray(cancelled) ? cancelled : []);
                     } else {
                         setSubscriptions([]);
+                        setFreeTrials([]);
                         setCancelledSubscriptions([]);
                     }
                 } catch (err) {
                     setSubscriptions([]);
+                    setFreeTrials([]);
                     setCancelledSubscriptions([]);
                 }
                 setLoading(false);
@@ -482,12 +532,37 @@
                     await supabase.from('subscriptions').update(formData).eq('id', editingId);
                     setEditingId(null);
                 } else {
-                    await supabase.from('subscriptions').insert({ ...formData, user_id: user.id, status: 'active' });
+                    await supabase.from('subscriptions').insert({ ...formData, user_id: user.id, status: 'active', type: 'subscription' });
                 }
                 await loadSubscriptions();
-                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active' });
+                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription' });
                 setShowForm(false);
                 setLoading(false);
+            };
+
+            const handleTrialSubmit = async () => {
+                if (!trialFormData.name || !trialFormData.trial_end_date) return;
+                setLoading(true);
+                await supabase.from('subscriptions').insert({ ...trialFormData, user_id: user.id, status: 'trial', type: 'trial' });
+                await loadSubscriptions();
+                setTrialFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', trial_end_date: '', description: '', status: 'trial', type: 'trial' });
+                setShowTrialForm(false);
+                setLoading(false);
+            };
+
+            const handleTemplateSelect = (template) => {
+                setFormData({
+                    name: template.name,
+                    cost: template.cost.toString(),
+                    billing_cycle: template.billing_cycle,
+                    category: template.category,
+                    next_billing_date: '',
+                    description: '',
+                    status: 'active',
+                    type: 'subscription'
+                });
+                setShowTemplates(false);
+                setShowForm(true);
             };
 
             const handleEdit = (sub) => {
@@ -498,7 +573,8 @@
                     category: sub.category,
                     next_billing_date: sub.next_billing_date || '',
                     description: sub.description || '',
-                    status: sub.status || 'active'
+                    status: sub.status || 'active',
+                    type: sub.type || 'subscription'
                 });
                 setEditingId(sub.id);
                 setShowForm(true);
@@ -523,8 +599,21 @@
                 }
             };
 
+            const handleConvertTrial = async (trial) => {
+                if (confirm(`Convert ${trial.name} to paid subscription?`)) {
+                    setLoading(true);
+                    await supabase.from('subscriptions').update({ 
+                        type: 'subscription', 
+                        status: 'active',
+                        next_billing_date: new Date().toISOString().split('T')[0]
+                    }).eq('id', trial.id);
+                    await loadSubscriptions();
+                    setLoading(false);
+                }
+            };
+
             const handleCancel = () => {
-                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active' });
+                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription' });
                 setEditingId(null);
                 setShowForm(false);
             };
@@ -547,11 +636,97 @@
                 return categoryTotals;
             };
 
+            const getDaysUntilTrialEnd = (trialEndDate) => {
+                const today = new Date();
+                const endDate = new Date(trialEndDate);
+                const diffTime = endDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            };
+
+            const getSmartInsights = () => {
+                const insights = [];
+                
+                // High spending category
+                const categoryData = getCategoryData();
+                const highestCategory = Object.entries(categoryData).sort((a, b) => b[1] - a[1])[0];
+                if (highestCategory && highestCategory[1] > totalMonthly * 0.4) {
+                    insights.push({
+                        type: 'warning',
+                        icon: '📊',
+                        title: `High ${highestCategory[0]} Spending`,
+                        message: `You're spending ${highestCategory[1].toFixed(2)}/month on ${highestCategory[0]} (${((highestCategory[1]/totalMonthly)*100).toFixed(0)}% of total). Consider if you're using all these services.`,
+                        action: 'Review Category'
+                    });
+                }
+
+                // Multiple streaming services
+                const streamingCount = subscriptions.filter(sub => sub.category === 'Streaming').length;
+                if (streamingCount >= 3) {
+                    const streamingCost = subscriptions
+                        .filter(sub => sub.category === 'Streaming')
+                        .reduce((sum, sub) => sum + calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle), 0);
+                    insights.push({
+                        type: 'tip',
+                        icon: '🎬',
+                        title: 'Multiple Streaming Services',
+                        message: `You have ${streamingCount} streaming services costing ${streamingCost.toFixed(2)}/month. Could you rotate subscriptions or share accounts to save money?`,
+                        action: 'Optimize Streaming'
+                    });
+                }
+
+                // Annual vs monthly savings
+                const monthlyBilled = subscriptions.filter(sub => sub.billing_cycle === 'Monthly');
+                if (monthlyBilled.length >= 3) {
+                    const potentialSavings = monthlyBilled.length * 2 * 12; // Estimate $2/month savings per service
+                    insights.push({
+                        type: 'success',
+                        icon: '💰',
+                        title: 'Switch to Annual Billing',
+                        message: `${monthlyBilled.length} services are billed monthly. Switching to annual could save you ~${potentialSavings}/year!`,
+                        action: 'View Services'
+                    });
+                }
+
+                // Budget alert
+                if (totalMonthly > 100) {
+                    insights.push({
+                        type: 'info',
+                        icon: '🎯',
+                        title: 'Budget Recommendation',
+                        message: `You're spending ${totalMonthly.toFixed(2)}/month on subscriptions. Set a budget goal to track your progress!`,
+                        action: 'Set Budget'
+                    });
+                }
+
+                // Trials ending soon
+                const trialsSoon = freeTrials.filter(trial => {
+                    const days = getDaysUntilTrialEnd(trial.trial_end_date);
+                    return days <= 3 && days >= 0;
+                });
+                if (trialsSoon.length > 0) {
+                    insights.push({
+                        type: 'alert',
+                        icon: '⏰',
+                        title: 'Trials Ending Soon',
+                        message: `${trialsSoon.length} free trial${trialsSoon.length > 1 ? 's' : ''} ending in 3 days! Don't forget to cancel if not needed.`,
+                        action: 'View Trials'
+                    });
+                }
+
+                return insights;
+            };
+
             const formatDate = (dateString) => {
                 if (!dateString) return 'Not set';
                 const date = new Date(dateString);
                 return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             };
+
+            const filteredTemplates = SERVICE_TEMPLATES.filter(template =>
+                template.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+                template.category.toLowerCase().includes(templateSearch.toLowerCase())
+            );
 
             // Config Modal
             if (showConfig) {
@@ -739,6 +914,90 @@
                             </div>
                         </div>
 
+                        {/* Smart Insights */}
+                        {(subscriptions.length > 0 || freeTrials.length > 0) && (
+                            <div className="mb-6">
+                                <button
+                                    onClick={() => setShowInsights(!showInsights)}
+                                    className="w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 hover:border-purple-300 transition-all"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Lightbulb className="text-purple-600" size={24} />
+                                        <div className="text-left">
+                                            <h3 className="font-bold text-purple-900">Smart Insights</h3>
+                                            <p className="text-sm text-purple-600">AI-powered recommendations for your subscriptions</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-purple-600">{showInsights ? '▼' : '▶'}</span>
+                                </button>
+
+                                {showInsights && (
+                                    <div className="mt-4 space-y-3">
+                                        {getSmartInsights().map((insight, idx) => (
+                                            <div key={idx} className={`p-4 rounded-xl border-2 ${
+                                                insight.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                                                insight.type === 'alert' ? 'bg-red-50 border-red-200' :
+                                                insight.type === 'success' ? 'bg-green-50 border-green-200' :
+                                                'bg-blue-50 border-blue-200'
+                                            }`}>
+                                                <div className="flex items-start gap-3">
+                                                    <span className="text-2xl">{insight.icon}</span>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-gray-900 mb-1">{insight.title}</h4>
+                                                        <p className="text-sm text-gray-700">{insight.message}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Free Trial Alerts */}
+                        {freeTrials.length > 0 && (
+                            <div className="mb-6 space-y-3">
+                                {freeTrials.map(trial => {
+                                    const daysLeft = getDaysUntilTrialEnd(trial.trial_end_date);
+                                    const isUrgent = daysLeft <= 3;
+                                    return (
+                                        <div key={trial.id} className={`p-5 rounded-xl border-2 ${isUrgent ? 'trial-alert bg-red-50 border-red-300' : 'bg-blue-50 border-blue-200'}`}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`p-3 rounded-full ${isUrgent ? 'bg-red-100' : 'bg-blue-100'}`}>
+                                                        <Gift className={isUrgent ? 'text-red-600' : 'text-blue-600'} size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900">{trial.name} - Free Trial</h3>
+                                                        <p className={`text-sm font-semibold ${isUrgent ? 'text-red-700' : 'text-blue-700'}`}>
+                                                            {daysLeft > 0 ? `${daysLeft} day${daysLeft > 1 ? 's' : ''} left` : daysLeft === 0 ? 'Ends today!' : 'Trial ended'}
+                                                        </p>
+                                                        <p className="text-xs text-gray-600 mt-1">
+                                                            Then ${trial.cost}/{trial.billing_cycle}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleConvertTrial(trial)}
+                                                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-semibold text-sm"
+                                                    >
+                                                        Keep It
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(trial.id)}
+                                                        className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all font-semibold text-sm"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         {/* Free tier warning */}
                         {!isPro && subscriptions.length >= 5 && (
                             <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl flex items-start gap-3">
@@ -805,19 +1064,6 @@
                                 <p className="text-xs text-gray-500 mt-1">per year</p>
                             </div>
                         </div>
-
-                        {/* Charts and Insights Button */}
-                        {subscriptions.length > 0 && (
-                            <div className="mb-6">
-                                <button
-                                    onClick={() => setShowChartsModal(true)}
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-white rounded-xl border-2 border-brand-blue/20 hover:border-brand-blue hover:shadow-md transition-all text-brand-blue font-semibold"
-                                >
-                                    <PieChart size={20} />
-                                    View Spending Analytics
-                                </button>
-                            </div>
-                        )}
 
                         {/* Main Content */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -927,7 +1173,7 @@
                                         <Logo variant="iso" size={80} className="opacity-50" />
                                     </div>
                                     <p className="text-gray-500 mb-2 font-medium text-lg">No subscriptions yet</p>
-                                    <p className="text-sm text-gray-400">Click "Add Subscription" to get started tracking</p>
+                                    <p className="text-sm text-gray-400">Click "Quick Add from Templates" to get started</p>
                                 </div>
                             )}
 
@@ -980,6 +1226,156 @@
                                 </div>
                             )}
                         </div>
+
+                        {/* Service Templates Modal */}
+                        {showTemplates && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowTemplates(false)}>
+                                <div className="bg-white rounded-2xl p-8 max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-brand-text mb-1">⚡ Quick Add Templates</h2>
+                                            <p className="text-gray-600">Select a popular service to add instantly</p>
+                                        </div>
+                                        <button onClick={() => setShowTemplates(false)} className="text-gray-400 hover:text-gray-600">
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <div className="relative">
+                                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                                            <input
+                                                type="text"
+                                                placeholder="Search services..."
+                                                value={templateSearch}
+                                                onChange={(e) => setTemplateSearch(e.target.value)}
+                                                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {filteredTemplates.map((template, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleTemplateSelect(template)}
+                                                className="p-4 border-2 border-gray-200 rounded-xl hover:border-brand-orange hover:bg-brand-orange/5 transition-all text-left group"
+                                            >
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="text-3xl">{template.icon}</span>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-bold text-brand-text group-hover:text-brand-orange transition-colors">
+                                                            {template.name}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-500">{template.category}</p>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm font-semibold text-gray-700">
+                                                    ${template.cost}/{template.billing_cycle}
+                                                </p>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {filteredTemplates.length === 0 && (
+                                        <div className="text-center py-12">
+                                            <p className="text-gray-500">No services found. Try a different search.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Free Trial Form Modal */}
+                        {showTrialForm && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowTrialForm(false)}>
+                                <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-brand-text mb-1">🎁 Track Free Trial</h2>
+                                            <p className="text-gray-600">Never forget to cancel before you're charged</p>
+                                        </div>
+                                        <button onClick={() => setShowTrialForm(false)} className="text-gray-400 hover:text-gray-600">
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Service name"
+                                            value={trialFormData.name}
+                                            onChange={(e) => setTrialFormData({...trialFormData, name: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                        />
+                                        
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="Cost after trial"
+                                                value={trialFormData.cost}
+                                                onChange={(e) => setTrialFormData({...trialFormData, cost: e.target.value})}
+                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                            />
+                                            <select
+                                                value={trialFormData.billing_cycle}
+                                                onChange={(e) => setTrialFormData({...trialFormData, billing_cycle: e.target.value})}
+                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                            >
+                                                {BILLING_CYCLES.map(cycle => (
+                                                    <option key={cycle} value={cycle}>{cycle}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <select
+                                            value={trialFormData.category}
+                                            onChange={(e) => setTrialFormData({...trialFormData, category: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                        >
+                                            {CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-brand-text mb-2">Trial End Date</label>
+                                            <input
+                                                type="date"
+                                                value={trialFormData.trial_end_date}
+                                                onChange={(e) => setTrialFormData({...trialFormData, trial_end_date: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            placeholder="Notes (optional)"
+                                            value={trialFormData.description}
+                                            onChange={(e) => setTrialFormData({...trialFormData, description: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3 mt-6">
+                                        <button
+                                            onClick={handleTrialSubmit}
+                                            disabled={loading || !trialFormData.name || !trialFormData.trial_end_date}
+                                            className="flex-1 gradient-orange text-white px-4 py-3 rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50"
+                                        >
+                                            Add Trial
+                                        </button>
+                                        <button
+                                            onClick={() => setShowTrialForm(false)}
+                                            className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Savings Modal */}
                         {showSavingsModal && (
@@ -1043,7 +1439,6 @@
                                         </button>
                                     </div>
 
-                                    {/* Summary Stats */}
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                                         <div className="bg-brand-turquoise/10 rounded-lg p-4">
                                             <p className="text-xs text-brand-turquoise font-medium mb-1">Monthly</p>
@@ -1063,22 +1458,18 @@
                                         </div>
                                     </div>
 
-                                    {/* Charts */}
                                     <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                        {/* Category Pie Chart */}
                                         <div className="bg-gray-50 rounded-xl p-6">
                                             <h3 className="font-semibold text-brand-text mb-4">Spending by Category</h3>
                                             <canvas id="categoryChart"></canvas>
                                         </div>
 
-                                        {/* Billing Cycle Chart */}
                                         <div className="bg-gray-50 rounded-xl p-6">
                                             <h3 className="font-semibold text-brand-text mb-4">Billing Cycles</h3>
                                             <canvas id="billingChart"></canvas>
                                         </div>
                                     </div>
 
-                                    {/* Category Breakdown */}
                                     <div className="bg-gray-50 rounded-xl p-6">
                                         <h3 className="font-semibold text-brand-text mb-4">Category Breakdown</h3>
                                         <div className="space-y-3">
