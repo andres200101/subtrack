@@ -511,7 +511,10 @@
             };
 
             const handleSubmit = async () => {
-                if (!formData.name || !formData.cost) return;
+                if (!formData.name || !formData.cost) {
+                    alert('Please enter service name and cost');
+                    return;
+                }
                 if (!canAddMore && !editingId) {
                     alert('Free tier limited to 5 subscriptions. Upgrade to Pro for unlimited!');
                     return;
@@ -519,20 +522,37 @@
                 
                 // Validate trial end date if type is trial
                 if (formData.type === 'trial' && !formData.trial_end_date) {
-                    alert('Please set a trial end date');
+                    alert('Please set a trial end date for free trials');
                     return;
                 }
                 
                 setLoading(true);
-                if (editingId) {
-                    await supabase.from('subscriptions').update(formData).eq('id', editingId);
-                    setEditingId(null);
-                } else {
-                    await supabase.from('subscriptions').insert({ ...formData, user_id: user.id, status: 'active' });
+                try {
+                    const dataToSave = {
+                        name: formData.name,
+                        cost: formData.cost,
+                        billing_cycle: formData.billing_cycle,
+                        category: formData.category,
+                        description: formData.description || '',
+                        status: 'active',
+                        type: formData.type || 'subscription',
+                        next_billing_date: formData.type === 'subscription' ? formData.next_billing_date : null,
+                        trial_end_date: formData.type === 'trial' ? formData.trial_end_date : null
+                    };
+
+                    if (editingId) {
+                        await supabase.from('subscriptions').update(dataToSave).eq('id', editingId);
+                        setEditingId(null);
+                    } else {
+                        await supabase.from('subscriptions').insert({ ...dataToSave, user_id: user.id });
+                    }
+                    await loadSubscriptions();
+                    setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription', trial_end_date: '' });
+                    setShowForm(false);
+                } catch (error) {
+                    console.error('Error saving subscription:', error);
+                    alert('Failed to save subscription. Please try again.');
                 }
-                await loadSubscriptions();
-                setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription', trial_end_date: '' });
-                setShowForm(false);
                 setLoading(false);
             };
 
@@ -1095,30 +1115,45 @@
                                         {/* Type Selection */}
                                         <select
                                             value={formData.type}
-                                            onChange={(e) => setFormData({...formData, type: e.target.value})}
-                                            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                            onChange={(e) => {
+                                                const newType = e.target.value;
+                                                setFormData({
+                                                    ...formData, 
+                                                    type: newType,
+                                                    // Clear the opposite date field when switching types
+                                                    next_billing_date: newType === 'subscription' ? formData.next_billing_date : '',
+                                                    trial_end_date: newType === 'trial' ? formData.trial_end_date : ''
+                                                });
+                                            }}
+                                            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent font-medium"
                                         >
-                                            <option value="subscription">Paid Subscription</option>
-                                            <option value="trial">Free Trial</option>
+                                            <option value="subscription">💳 Paid Subscription</option>
+                                            <option value="trial">🎁 Free Trial</option>
                                         </select>
 
                                         {/* Conditional Date Fields */}
                                         {formData.type === 'trial' ? (
-                                            <input
-                                                type="date"
-                                                value={formData.trial_end_date}
-                                                onChange={(e) => setFormData({...formData, trial_end_date: e.target.value})}
-                                                placeholder="Trial End Date"
-                                                className="px-4 py-3 border-2 border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-yellow-50"
-                                            />
+                                            <div>
+                                                <label className="block text-xs font-medium text-yellow-700 mb-1">Trial End Date *</label>
+                                                <input
+                                                    type="date"
+                                                    value={formData.trial_end_date}
+                                                    onChange={(e) => setFormData({...formData, trial_end_date: e.target.value})}
+                                                    min={new Date().toISOString().split('T')[0]}
+                                                    required
+                                                    className="w-full px-4 py-3 border-2 border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-yellow-50"
+                                                />
+                                            </div>
                                         ) : (
-                                            <input
-                                                type="date"
-                                                value={formData.next_billing_date}
-                                                onChange={(e) => setFormData({...formData, next_billing_date: e.target.value})}
-                                                placeholder="Next Billing Date"
-                                                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
-                                            />
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Next Billing Date (optional)</label>
+                                                <input
+                                                    type="date"
+                                                    value={formData.next_billing_date}
+                                                    onChange={(e) => setFormData({...formData, next_billing_date: e.target.value})}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-turquoise focus:border-transparent"
+                                                />
+                                            </div>
                                         )}
                                         
                                         <input
