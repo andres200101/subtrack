@@ -349,30 +349,47 @@
                 }
             }, [showChartsModal, subscriptions]);
             // Price History Helper Functions
+            999999999999999
             const addPriceHistory = async (subscriptionId, oldPrice, newPrice, reason = 'manual_update') => {
-                if (oldPrice === newPrice) return;
+                if (!subscriptionId || oldPrice === newPrice) return;
                 
-                const priceChange = {
-                    date: new Date().toISOString(),
-                    old_price: parseFloat(oldPrice),
-                    new_price: parseFloat(newPrice),
-                    change_amount: parseFloat(newPrice) - parseFloat(oldPrice),
-                    change_percentage: ((parseFloat(newPrice) - parseFloat(oldPrice)) / parseFloat(oldPrice) * 100).toFixed(2),
-                    reason: reason
-                };
+                try {
+                    const priceChange = {
+                        date: new Date().toISOString(),
+                        old_price: parseFloat(oldPrice),
+                        new_price: parseFloat(newPrice),
+                        change_amount: parseFloat(newPrice) - parseFloat(oldPrice),
+                        change_percentage: parseFloat(oldPrice) !== 0 
+                            ? ((parseFloat(newPrice) - parseFloat(oldPrice)) / parseFloat(oldPrice) * 100).toFixed(2) 
+                            : 0,
+                        reason: reason
+                    };
 
-                // Get current subscription
-                const { data: currentSub } = await supabase.from('subscriptions').select('price_history').eq('id', subscriptionId);
-                
-                if (currentSub && currentSub[0]) {
-                    let priceHistory = currentSub[0].price_history || [];
+                    // Get current subscription
+                    const { data: currentSub, error: fetchError } = await supabase
+                        .from('subscriptions')
+                        .select('price_history')
+                        .eq('id', subscriptionId)
+                        .single();
                     
-                    // Parse if it's a string
-                    if (typeof priceHistory === 'string') {
-                        try {
-                            priceHistory = JSON.parse(priceHistory);
-                        } catch {
-                            priceHistory = [];
+                    if (fetchError) {
+                        console.error('Error fetching price history:', fetchError);
+                        return;
+                    }
+                    
+                    let priceHistory = [];
+                    
+                    if (currentSub && currentSub.price_history) {
+                        // Parse if it's a string
+                        if (typeof currentSub.price_history === 'string') {
+                            try {
+                                priceHistory = JSON.parse(currentSub.price_history);
+                            } catch (e) {
+                                console.error('Error parsing price history:', e);
+                                priceHistory = [];
+                            }
+                        } else if (Array.isArray(currentSub.price_history)) {
+                            priceHistory = currentSub.price_history;
                         }
                     }
                     
@@ -383,9 +400,16 @@
                         priceHistory = priceHistory.slice(-50);
                     }
                     
-                    await supabase.from('subscriptions').update({ 
-                        price_history: JSON.stringify(priceHistory) 
-                    }).eq('id', subscriptionId);
+                    const { error: updateError } = await supabase
+                        .from('subscriptions')
+                        .update({ price_history: JSON.stringify(priceHistory) })
+                        .eq('id', subscriptionId);
+                    
+                    if (updateError) {
+                        console.error('Error updating price history:', updateError);
+                    }
+                } catch (error) {
+                    console.error('Error in addPriceHistory:', error);
                 }
             };
 
@@ -655,25 +679,30 @@
                         // Check if price changed
                         const currentSub = subscriptions.find(s => s.id === editingId);
                         if (currentSub && parseFloat(currentSub.cost) !== parseFloat(formData.cost)) {
+                            // Add price history BEFORE updating
                             await addPriceHistory(editingId, currentSub.cost, formData.cost, 'manual_update');
                         }
                         
                         await supabase.from('subscriptions').update(dataToSave).eq('id', editingId);
                         setEditingId(null);
                     } else {
-                        const { data: newSub } = await supabase.from('subscriptions').insert({ 
+                        // For new subscriptions, create initial price history
+                        const initialHistory = [{
+                            date: new Date().toISOString(),
+                            old_price: 0,
+                            new_price: parseFloat(formData.cost),
+                            change_amount: parseFloat(formData.cost),
+                            change_percentage: 0,
+                            reason: 'initial_price'
+                        }];
+                        
+                        await supabase.from('subscriptions').insert({ 
                             ...dataToSave, 
                             user_id: user.id,
-                            price_history: JSON.stringify([{
-                                date: new Date().toISOString(),
-                                old_price: 0,
-                                new_price: parseFloat(formData.cost),
-                                change_amount: parseFloat(formData.cost),
-                                change_percentage: 0,
-                                reason: 'initial_price'
-                            }])
+                            price_history: JSON.stringify(initialHistory)
                         });
                     }
+                    
                     await loadSubscriptions();
                     setFormData({ name: '', cost: '', billing_cycle: 'Monthly', category: 'Streaming', next_billing_date: '', description: '', status: 'active', type: 'subscription', trial_end_date: '' });
                     setShowForm(false);
