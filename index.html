@@ -1448,7 +1448,9 @@
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => {
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        console.log('Edit Budget clicked');
                                                         setBudgetAmount(monthlyBudget.toString());
                                                         setShowBudgetModal(true);
                                                     }}
@@ -1604,7 +1606,10 @@
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => setShowBudgetModal(true)}
+                                        onClick={() => {
+                                            console.log('Set Budget clicked');
+                                            setShowBudgetModal(true);
+                                        }}
                                         className="px-6 py-3 gradient-blue text-white rounded-lg hover:shadow-lg transition-all font-semibold"
                                     >
                                         Set Budget
