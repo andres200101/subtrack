@@ -319,12 +319,6 @@
                     loadShareGroups();
                 }
             }, [user, supabase]);
-            
-            useEffect(() => {
-                if (user) {
-                    loadBudget();
-                }
-            }, [user]);
 
             useEffect(() => {
                 if (showChartsModal && subscriptions.length > 0) {
@@ -553,6 +547,19 @@
         setShareGroups([]);
     }
 };
+// Budget Management Functions
+const loadBudget = () => {
+    if (!user) return;
+    const savedBudget = localStorage.getItem(`budget_${user.id}`);
+    if (savedBudget) {
+        setMonthlyBudget(parseFloat(savedBudget));
+    }
+};
+useEffect(() => {
+    if (user) {
+        loadBudget();
+    }
+}, [user]);
             
             
         
