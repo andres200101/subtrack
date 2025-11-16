@@ -522,26 +522,40 @@
                 
                 return recentChanges.sort((a, b) => new Date(b.date) - new Date(a.date));
             };
-            const loadShareGroups = async () => {
-                if (!supabase || !user) return;
-                try {
-                    const { data, error } = await supabase.from('share_groups').select('*');
-                    if (!error && data) {
-                        setShareGroups(Array.isArray(data) ? data : []);
-                    }
-                } catch (err) {
-                    console.error('Error loading share groups:', err);
-                }
-            };
-            // Budget Management Functions
-            const loadBudget = () => {
-                if (!user) return;
-                const savedBudget = localStorage.getItem(`budget_${user.id}`);
-                if (savedBudget) {
-                    setMonthlyBudget(parseFloat(savedBudget));
-                }
-            };
 
+            const loadShareGroups = async () => {
+    if (!supabase || !user) {
+        console.log('Cannot load share groups: missing supabase or user');
+        return;
+    }
+    
+    console.log('Loading share groups for user:', user.id);
+    
+    try {
+        const { data, error } = await supabase.from('share_groups').select('*');
+        
+        console.log('Share groups response:', { data, error });
+        
+        if (error) {
+            console.error('Error loading share groups:', error);
+            setShareGroups([]);
+            return;
+        }
+        
+        if (!error && data) {
+            console.log('Loaded share groups:', data);
+            setShareGroups(Array.isArray(data) ? data : []);
+        } else {
+            setShareGroups([]);
+        }
+    } catch (err) {
+        console.error('Exception loading share groups:', err);
+        setShareGroups([]);
+    }
+};
+            
+            
+        
             const saveBudget = () => {
                 if (!budgetAmount || parseFloat(budgetAmount) <= 0) {
                     alert('Please enter a valid budget amount');
