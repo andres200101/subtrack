@@ -886,7 +886,6 @@
                     setLoading(false);
                 }
             };
-
             const createShareGroup = async () => {
     if (!groupFormData.subscription_id || groupFormData.total_slots < 2) {
         alert('Please select a subscription and set at least 2 slots');
@@ -894,10 +893,18 @@
     }
 
     const subscription = subscriptions.find(s => s.id === groupFormData.subscription_id);
+    
+    if (!subscription) {
+        alert('Subscription not found');
+        return;
+    }
+    
     const costPerPerson = parseFloat(subscription.cost) / groupFormData.total_slots;
 
     try {
-        await supabase.from('share_groups').insert({
+        setLoading(true);
+        
+        const shareGroupData = {
             user_id: user.id,
             subscription_id: groupFormData.subscription_id,
             subscription_name: subscription.name,
@@ -911,17 +918,29 @@
                 status: 'owner',
                 paid: true
             }])
-        });
+        };
+
+        const { data, error } = await supabase.from('share_groups').insert(shareGroupData);
+        
+        if (error) {
+            console.error('Supabase error:', error);
+            alert('Failed to create share group: ' + error.message);
+            setLoading(false);
+            return;
+        }
 
         await loadShareGroups();
         setShowCreateGroupModal(false);
         setGroupFormData({ subscription_id: '', total_slots: 2, cost_per_person: 0, members: [] });
         alert('✅ Share group created! Invite members to split the cost.');
+        setLoading(false);
     } catch (error) {
         console.error('Error creating share group:', error);
-        alert('Failed to create share group');
+        alert('Failed to create share group: ' + error.message);
+        setLoading(false);
     }
 };
+            
 
 const addMemberToGroup = async (groupId, memberEmail, memberName) => {
     const group = shareGroups.find(g => g.id === groupId);
@@ -3113,38 +3132,40 @@ const deleteShareGroup = async (groupId) => {
                     />
                     <p className="text-xs text-gray-500 mt-1">How many people will share this subscription? (2-6 people)</p>
                 </div>
-
-                {groupFormData.subscription_id && (
-                    <div className="p-4 bg-gradient-to-r from-green-50 to-cyan-50 rounded-xl border-2 border-green-200">
-                        <h3 className="font-bold text-green-900 mb-3">💰 Savings Breakdown</h3>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-700">Original cost:</span>
-                                <span className="font-bold">${subscriptions.find(s => s.id === groupFormData.subscription_id)?.cost}/mo</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-700">Your share:</span>
-                                <span className="font-bold text-brand-orange">
-                                    ${(parseFloat(subscriptions.find(s => s.id === groupFormData.subscription_id)?.cost || 0) / groupFormData.total_slots).toFixed(2)}/mo
-                                </span>
-                            </div>
-                            <div className="h-px bg-green-300 my-2"></div>
-                            <div className="flex justify-between">
-                                <span className="text-green-700 font-bold">You save:</span>
-                                <span className="font-bold text-green-600">
-                                    ${(parseFloat(subscriptions.find(s => s.id === groupFormData.subscription_id)?.cost || 0) * (1 - 1/groupFormData.total_slots)).toFixed(2)}/mo
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-green-700 font-bold">Yearly savings:</span>
-                                <span className="font-bold text-green-600">
-                                    ${(parseFloat(subscriptions.find(s => s.id === groupFormData.subscription_id)?.cost || 0) * (1 - 1/groupFormData.total_slots) * 12).toFixed(2)}/year
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {groupFormData.subscription_id && (() => {
+    const selectedSub = subscriptions.find(s => s.id === groupFormData.subscription_id);
+    if (!selectedSub) return null;
+    
+    const originalCost = parseFloat(selectedSub.cost);
+    const yourShare = originalCost / groupFormData.total_slots;
+    const savings = originalCost - yourShare;
+    const yearlySavings = savings * 12;
+    
+    return (
+        <div className="p-4 bg-gradient-to-r from-green-50 to-cyan-50 rounded-xl border-2 border-green-200">
+            <h3 className="font-bold text-green-900 mb-3">💰 Savings Breakdown</h3>
+            <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                    <span className="text-gray-700">Original cost:</span>
+                    <span className="font-bold">${originalCost.toFixed(2)}/mo</span>
+                </div>
+                <div className="flex justify-between">
+                    <span className="text-gray-700">Your share:</span>
+                    <span className="font-bold text-brand-orange">${yourShare.toFixed(2)}/mo</span>
+                </div>
+                <div className="h-px bg-green-300 my-2"></div>
+                <div className="flex justify-between">
+                    <span className="text-green-700 font-bold">You save:</span>
+                    <span className="font-bold text-green-600">${savings.toFixed(2)}/mo</span>
+                </div>
+                <div className="flex justify-between">
+                    <span className="text-green-700 font-bold">Yearly savings:</span>
+                    <span className="font-bold text-green-600">${yearlySavings.toFixed(2)}/year</span>
+                </div>
             </div>
+        </div>
+    );
+})()}
 
             <button
                 onClick={createShareGroup}
