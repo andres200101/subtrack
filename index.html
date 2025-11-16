@@ -516,7 +516,6 @@
                 
                 return recentChanges.sort((a, b) => new Date(b.date) - new Date(a.date));
             };
-
             const loadShareGroups = async () => {
     if (!supabase || !user) {
         console.log('Cannot load share groups: missing supabase or user');
@@ -526,7 +525,8 @@
     console.log('Loading share groups for user:', user.id);
     
     try {
-        const { data, error } = await supabase.from('share_groups').select('*');
+        // Filter by user_id to only get this user's share groups
+        const { data, error } = await supabase.from('share_groups').select('*').eq('user_id', user.id);
         
         console.log('Share groups response:', { data, error });
         
@@ -547,6 +547,7 @@
         setShareGroups([]);
     }
 };
+
 // Budget Management Functions
 const loadBudget = () => {
     if (!user) return;
