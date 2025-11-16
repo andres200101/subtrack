@@ -887,15 +887,29 @@
                 }
             };
             const createShareGroup = async () => {
+    console.log('Creating share group...');
+    console.log('Form data:', groupFormData);
+    console.log('Available subscriptions:', subscriptions);
+    
     if (!groupFormData.subscription_id || groupFormData.total_slots < 2) {
         alert('Please select a subscription and set at least 2 slots');
         return;
     }
 
-    const subscription = subscriptions.find(s => s.id === groupFormData.subscription_id);
+    // Find subscription - try both string and direct comparison
+    let subscription = subscriptions.find(s => s.id === groupFormData.subscription_id);
+    
+    // If not found, try converting to string
+    if (!subscription) {
+        subscription = subscriptions.find(s => String(s.id) === String(groupFormData.subscription_id));
+    }
+    
+    console.log('Found subscription:', subscription);
     
     if (!subscription) {
-        alert('Subscription not found');
+        console.error('Subscription not found. Looking for ID:', groupFormData.subscription_id);
+        console.error('Available IDs:', subscriptions.map(s => s.id));
+        alert('Subscription not found. Please try selecting a different subscription.');
         return;
     }
     
@@ -920,6 +934,8 @@
             }])
         };
 
+        console.log('Inserting share group data:', shareGroupData);
+
         const { data, error } = await supabase.from('share_groups').insert(shareGroupData);
         
         if (error) {
@@ -928,6 +944,8 @@
             setLoading(false);
             return;
         }
+
+        console.log('Share group created successfully:', data);
 
         await loadShareGroups();
         setShowCreateGroupModal(false);
