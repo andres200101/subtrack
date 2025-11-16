@@ -2531,7 +2531,17 @@
                                             ))}
                                         </div>
                                     </div>
-                                    {/* Budget Modal */}
+                                    <button
+                                        onClick={() => setShowChartsModal(false)}
+                                        className="w-full mt-6 gradient-blue text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Budget Modal - Moved outside Charts Modal */}
                         {showBudgetModal && (
                             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]" onClick={() => setShowBudgetModal(false)}>
                                 <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -2696,16 +2706,6 @@
                                             <strong>💡 Tip:</strong> Set a realistic budget based on your spending habits. You'll get alerts when you're approaching your limit!
                                         </p>
                                     </div>
-                                </div>
-                            </div>
-                        )}
-
-                                    <button
-                                        onClick={() => setShowChartsModal(false)}
-                                        className="w-full mt-6 gradient-blue text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
-                                    >
-                                        Close
-                                    </button>
                                 </div>
                             </div>
                         )}
