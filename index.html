@@ -525,25 +525,32 @@
     console.log('Loading share groups for user:', user.id);
     
     try {
-        // Filter by user_id to only get this user's share groups
+        // First try to get all share groups without filter to debug
+        const { data: allData, error: allError } = await supabase.from('share_groups').select('*');
+        console.log('ALL share groups in database:', { allData, allError });
+        
+        // Then filter by user_id
         const { data, error } = await supabase.from('share_groups').select('*').eq('user_id', user.id);
         
-        console.log('Share groups response:', { data, error });
+        console.log('Filtered share groups response:', { data, error, userId: user.id });
         
         if (error) {
             console.error('Error loading share groups:', error);
+            alert('Error loading share groups: ' + error.message);
             setShareGroups([]);
             return;
         }
         
-        if (!error && data) {
-            console.log('Loaded share groups:', data);
+        if (data) {
+            console.log('Setting share groups to:', data);
             setShareGroups(Array.isArray(data) ? data : []);
         } else {
+            console.log('No data returned, setting empty array');
             setShareGroups([]);
         }
     } catch (err) {
         console.error('Exception loading share groups:', err);
+        alert('Exception loading share groups: ' + err.message);
         setShareGroups([]);
     }
 };
