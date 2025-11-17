@@ -1,0 +1,137 @@
+/* Receipt Scanner Styles */
+.receipt-scanner-container {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.receipt-upload-zone {
+    border: 3px dashed rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.receipt-upload-zone:hover {
+    border-color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.receipt-upload-zone.dragging {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    transform: scale(1.02);
+}
+
+.scanning-animation {
+    animation: scan 2s ease-in-out infinite;
+}
+
+@keyframes scan {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(100%); opacity: 1; }
+}
+
+.receipt-preview {
+    max-height: 300px;
+    object-fit: contain;
+}
+
+/* Virtual Card Styles */
+.virtual-card {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.virtual-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: translate(-50%, -50%) scale(0.8); }
+    50% { transform: translate(-30%, -30%) scale(1); }
+}
+
+.card-number {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    font-size: 1.25rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-chip {
+    width: 50px;
+    height: 40px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border-radius: 8px;
+    position: relative;
+}
+
+.card-chip::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.1) 2px,
+        rgba(0,0,0,0.1) 4px
+    );
+    border-radius: 4px;
+}
+
+.card-status-active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-status-paused {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.card-status-cancelled {
+    background: linear-gradient(135deg, #4b4b4b 0%, #2a2a2a 100%);
+}
+
+/* Blur effect for security */
+.card-number-blurred {
+    filter: blur(8px);
+    transition: filter 0.3s ease;
+}
+
+.card-number-blurred:hover {
+    filter: blur(0);
+}
+
+/* Loading spinner */
+.ocr-loading {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Success checkmark animation */
+.success-checkmark {
+    animation: pop 0.3s ease-out;
+}
+
+@keyframes pop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}

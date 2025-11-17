@@ -10,6 +10,9 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- NEW - Automation Suite Dependencies -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+    <link rel="stylesheet" href="css/automation-suite.css">
     <script>
         tailwind.config = {
             theme: {
@@ -58,6 +61,11 @@
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
         }
     </style>
+    <!-- Automation Suite Styles -->
+<link rel="stylesheet" href="css/automation-suite.css">
+
+<!-- Tesseract.js for OCR Receipt Scanning -->
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
 </head>
 <body class="bg-brand-bg">
     <div id="root"></div>
@@ -291,6 +299,10 @@ const [autopilotSettings, setAutopilotSettings] = useState({
                 cost_per_person: 0,
                 members: []
             });
+            // NEW - Receipt Scanner & Virtual Cards State
+const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+const [showVirtualCardModal, setShowVirtualCardModal] = useState(false);
+const [selectedSubForCard, setSelectedSubForCard] = useState(null);
 
             const [formData, setFormData] = useState({
                 name: '',
@@ -2668,16 +2680,25 @@ const deleteShareGroup = async (groupId) => {
                         {/* Main Content */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-brand-text">Your Subscriptions</h2>
-                                <button
-                                    onClick={() => canAddMore ? setShowForm(!showForm) : handleUpgrade()}
-                                    disabled={loading}
-                                    className="flex items-center gap-2 gradient-blue text-white px-4 py-2.5 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-semibold"
-                                >
-                                    <PlusCircle size={20} />
-                                    {canAddMore ? 'Add Subscription' : 'Upgrade to Add More'}
-                                </button>
-                            </div>
+    <h2 className="text-xl font-bold text-brand-text">Your Subscriptions</h2>
+    <div className="flex items-center gap-3">
+        <button
+            onClick={() => setShowReceiptScanner(true)}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2.5 rounded-lg hover:shadow-lg transition-all font-semibold"
+            title="Scan a receipt to auto-fill subscription details"
+        >
+            📸 Scan Receipt
+        </button>
+        <button
+            onClick={() => canAddMore ? setShowForm(!showForm) : handleUpgrade()}
+            disabled={loading}
+            className="flex items-center gap-2 gradient-blue text-white px-4 py-2.5 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-semibold"
+        >
+            <PlusCircle size={20} />
+            {canAddMore ? 'Add Subscription' : 'Upgrade to Add More'}
+        </button>
+    </div>
+</div>
 
                             {/* Form */}
                             {showForm && (
@@ -2846,6 +2867,18 @@ const deleteShareGroup = async (groupId) => {
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2">
+                                                {/* NEW - Virtual Card Button */}
+    <button
+        onClick={() => {
+            setSelectedSubForCard(sub);
+            setShowVirtualCardModal(true);
+        }}
+        disabled={loading}
+        className="p-2 text-gray-600 hover:text-purple-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
+        title="Manage Virtual Card"
+    >
+        💳
+    </button>
                                                 <button
                                                     onClick={() => handleEdit(sub)}
                                                     disabled={loading}
@@ -3767,11 +3800,45 @@ const deleteShareGroup = async (groupId) => {
         </div>
     </div>
 )}
+{/* Receipt Scanner Modal */}
+                        {showReceiptScanner && window.ReceiptScanner && (
+                            <window.ReceiptScanner
+                                onReceiptScanned={(data) => {
+                                    setFormData({
+                                        ...formData,
+                                        name: data.name || formData.name,
+                                        cost: data.cost || formData.cost,
+                                        billing_cycle: data.billing_cycle || formData.billing_cycle,
+                                        category: data.category || formData.category
+                                    });
+                                    setShowForm(true);
+                                    setShowReceiptScanner(false);
+                                }}
+                                onClose={() => setShowReceiptScanner(false)}
+                            />
+                        )}
+
+                        {/* Virtual Card Modal */}
+                        {showVirtualCardModal && selectedSubForCard && window.VirtualCards && (
+                            <window.VirtualCards
+                                subscription={selectedSubForCard}
+                                onUpdate={async (updates) => {
+                                    await supabase.from('subscriptions')
+                                        .update(updates)
+                                        .eq('id', selectedSubForCard.id);
+                                    await loadSubscriptions();
+                                }}
+                                onClose={() => {
+                                    setShowVirtualCardModal(false);
+                                    setSelectedSubForCard(null);
+                                }}
+                            />
+                        )}
                         {/* Footer */}
                         <div className="mt-12 text-center">
-                            <div className="flex justify-center mb-3">
-                                <Logo variant="iso" size={32} className="opacity-40" />
-                            </div>
+                             <div className="flex justify-center mb-3">
+                                 <Logo variant="iso" size={32} className="opacity-40" />
+                             </div>
                             <p className="text-sm text-gray-500">© 2024 SubTrack. Take control of your subscriptions.</p>
                         </div>
                     </div>
@@ -3781,5 +3848,8 @@ const deleteShareGroup = async (groupId) => {
 
         ReactDOM.render(<SubTrackApp />, document.getElementById('root'));
     </script>
+    <!-- Automation Suite - Receipt Scanner & Virtual Cards -->
+    <script type="text/babel" src="js/receipt-scanner.js"></script>
+    <script type="text/babel" src="js/virtual-cards.js"></script>
 </body>
 </html>
