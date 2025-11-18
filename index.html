@@ -14,6 +14,10 @@
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
     <!-- Plaid Link -->
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <!-- Gmail API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Email Scanner -->
+    <script type="text/babel" src="js/email-scanner.js"></script>
 
     <!-- Bank Integration Component -->
     <script type="text/babel" src="js/bank-integration.js"></script>
@@ -289,6 +293,7 @@
             const [shareGroups, setShareGroups] = useState([]);
             const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
             const [selectedGroupForEdit, setSelectedGroupForEdit] = useState(null);
+            const [showEmailScanner, setShowEmailScanner] = useState(false);
             // ADD THESE LINES after your existing state declarations:
 const [showAutopilotModal, setShowAutopilotModal] = useState(false);
 const [autopilotEnabled, setAutopilotEnabled] = useState(false);
@@ -2796,6 +2801,12 @@ const deleteShareGroup = async (groupId) => {
         </button>
     </div>
 </div>
+<button
+    onClick={() => setShowEmailScanner(true)}
+    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+>
+    📧 Scan Emails
+</button>
 
                             {/* Form */}
                             {showForm && (
@@ -3938,6 +3949,14 @@ const deleteShareGroup = async (groupId) => {
                                  onSubscriptionsImported={loadSubscriptions}
                                  onClose={() => setShowBankIntegration(false)}
                              />
+                         )}
+                         {showEmailScanner && window.EmailScanner && (
+                             <window.EmailScanner
+                                 user={user}
+                                 supabase={supabase}
+                                 onSubscriptionsImported={loadSubscriptions}
+                                 onClose={() => setShowEmailScanner(false)}
+                            />
                          )}
 
                         {/* Footer */}
