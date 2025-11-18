@@ -12,6 +12,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- NEW - Automation Suite Dependencies -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+    <!-- Plaid Link -->
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+
+    <!-- Bank Integration Component -->
+    <script type="text/babel" src="js/bank-integration.js"></script>
     <link rel="stylesheet" href="css/automation-suite.css">
     <script>
         tailwind.config = {
@@ -276,6 +281,7 @@
             const [showWrappedModal, setShowWrappedModal] = useState(false);
             const [showPriceHistoryModal, setShowPriceHistoryModal] = useState(false);
             const [selectedSubForHistory, setSelectedSubForHistory] = useState(null);
+            const [showBankIntegration, setShowBankIntegration] = useState(false);
             const [showBudgetModal, setShowBudgetModal] = useState(false);
             const [monthlyBudget, setMonthlyBudget] = useState(null);
             const [budgetAmount, setBudgetAmount] = useState('');
@@ -753,6 +759,91 @@ useEffect(() => {
         loadAutopilotSettings();
     }
 }, [user]);
+// Check if bank is connected and show indicator
+    useEffect(() => {
+        const checkBankConnection = async () => {
+            if (!user || !supabase) return;
+            
+            const { data } = await supabase
+                .from('bank_connections')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .single();
+            
+            if (data) {
+                // User has connected bank
+                console.log('Bank connected:', data.institution_name);
+                // You could set a state here to show a badge
+                // setBankConnected(true);
+            }
+        };
+        
+        checkBankConnection();
+    }, [user, supabase]);
+    
+    // Helper functions
+    const getDateDaysAgo = (days) => {
+        const date = new Date();
+        date.setDate(date.getDate() - days);
+        return date.toISOString().split('T')[0];
+    };
+    
+    const getTodayDate = () => {
+        return new Date().toISOString().split('T')[0];
+    };
+    
+    // Auto-sync transactions daily
+    const autoSyncTransactions = async () => {
+        if (!user || !supabase) return;
+        
+        try {
+            const { data: connection } = await supabase
+                .from('bank_connections')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .single();
+            
+            if (!connection) return;
+            
+            // Check if last sync was more than 24 hours ago
+            const lastSync = new Date(connection.last_synced || connection.connected_at);
+            const now = new Date();
+            const hoursSinceSync = (now - lastSync) / (1000 * 60 * 60);
+            
+            if (hoursSinceSync >= 24) {
+                const response = await fetch('http://localhost:8000/api/transactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        access_token: connection.access_token,
+                        start_date: getDateDaysAgo(30),
+                        end_date: getTodayDate()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Update last_synced
+                await supabase
+                    .from('bank_connections')
+                    .update({ last_synced: now.toISOString() })
+                    .eq('id', connection.id);
+                
+                console.log('✅ Auto-sync completed:', data.transactions.length, 'transactions');
+            }
+        } catch (error) {
+            console.error('Auto-sync error:', error);
+        }
+    };
+    
+    // Call auto-sync on app load
+    useEffect(() => {
+        if (user) {
+            autoSyncTransactions();
+        }
+    }, [user]);
             
             
         
@@ -2690,6 +2781,12 @@ const deleteShareGroup = async (groupId) => {
             📸 Scan Receipt
         </button>
         <button
+    onClick={() => setShowBankIntegration(true)}
+    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+>
+    🏦 Connect Bank
+</button>
+        <button
             onClick={() => canAddMore ? setShowForm(!showForm) : handleUpgrade()}
             disabled={loading}
             className="flex items-center gap-2 gradient-blue text-white px-4 py-2.5 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 font-semibold"
@@ -3834,6 +3931,15 @@ const deleteShareGroup = async (groupId) => {
                                 }}
                             />
                         )}
+                        {showBankIntegration && window.BankIntegration && (
+                             <window.BankIntegration
+                                 user={user}
+                                 supabase={supabase}
+                                 onSubscriptionsImported={loadSubscriptions}
+                                 onClose={() => setShowBankIntegration(false)}
+                             />
+                         )}
+
                         {/* Footer */}
                         <div className="mt-12 text-center">
                              <div className="flex justify-center mb-3">
