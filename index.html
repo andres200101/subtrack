@@ -293,6 +293,9 @@
             const [shareGroups, setShareGroups] = useState([]);
             const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
             const [selectedGroupForEdit, setSelectedGroupForEdit] = useState(null);
+            const [showNotifications, setShowNotifications] = React.useState(false);
+const [showNegotiationAssistant, setShowNegotiationAssistant] = React.useState(false);
+const [selectedSubscription, setSelectedSubscription] = React.useState(null);
             const [showEmailScanner, setShowEmailScanner] = useState(false);
             // ADD THESE LINES after your existing state declarations:
 const [showAutopilotModal, setShowAutopilotModal] = useState(false);
@@ -3005,6 +3008,18 @@ const deleteShareGroup = async (groupId) => {
     >
         💳
     </button>
+     {/* ADD THIS - Negotiation Assistant Button */}
+    <button
+        onClick={() => {
+            setSelectedSubscription(sub);
+            setShowNegotiationAssistant(true);
+        }}
+        disabled={loading}
+        className="p-2 text-gray-600 hover:text-purple-600 hover:bg-white rounded-lg transition-colors disabled:opacity-50"
+        title="Negotiate Price"
+    >
+        ✨
+    </button>
                                                 <button
                                                     onClick={() => handleEdit(sub)}
                                                     disabled={loading}
@@ -3960,6 +3975,27 @@ const deleteShareGroup = async (groupId) => {
                                 }}
                             />
                         )}
+                        {/* Notifications Modal */}
+{showNotifications && (
+    <window.NotificationsSystem
+        user={user}
+        subscriptions={subscriptions}
+        monthlyBudget={monthlyBudget}
+        onClose={() => setShowNotifications(false)}
+    />
+)}
+
+{/* Negotiation Assistant Modal */}
+{showNegotiationAssistant && selectedSubscription && (
+    <window.NegotiationAssistant
+        subscription={selectedSubscription}
+        user={user}
+        onClose={() => {
+            setShowNegotiationAssistant(false);
+            setSelectedSubscription(null);
+        }}
+    />
+)}
                         {showBankIntegration && window.BankIntegration && (
                              <window.BankIntegration
                                  user={user}
