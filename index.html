@@ -2807,6 +2807,24 @@ const deleteShareGroup = async (groupId) => {
 >
     📧 Scan Emails
 </button>
+<button
+    onClick={() => setShowNegotiationAssistant(true)}
+    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+>
+    ✨ AI Negotiation
+</button>
+
+<button
+    onClick={() => setShowNotifications(true)}
+    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold relative"
+>
+    🔔 Notifications
+    {notifications.length > 0 && (
+        <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-red-600 text-white text-xs rounded-full font-bold">
+            {notifications.length}
+        </span>
+    )}
+</button>
 
                             {/* Form */}
                             {showForm && (
@@ -3976,5 +3994,8 @@ const deleteShareGroup = async (groupId) => {
     <!-- Automation Suite - Receipt Scanner & Virtual Cards -->
     <script type="text/babel" src="js/receipt-scanner.js"></script>
     <script type="text/babel" src="js/virtual-cards.js"></script>
+    <!-- NEW FEATURES -->
+    <script type="text/babel" src="js/negotiation-assistant.js"></script>
+    <script type="text/babel" src="js/notifications.js"></script>
 </body>
 </html>
