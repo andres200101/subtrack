@@ -20,6 +20,7 @@
     <script src="https://apis.google.com/js/api.js"></script>
     <!-- Email Scanner -->
     <script type="text/babel" src="js/email-scanner.js"></script>
+    <script type="text/babel" src="js/command-palette.js"></script>
 
     <!-- Bank Integration Component -->
     <script type="text/babel" src="js/bank-integration.js"></script>
@@ -450,13 +451,14 @@ const Logo = ({ size = 40, className = '' }) => {
             const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
             const [selectedGroupForEdit, setSelectedGroupForEdit] = useState(null);
             const [showNotifications, setShowNotifications] = React.useState(false);
-const [showNegotiationAssistant, setShowNegotiationAssistant] = React.useState(false);
-const [selectedSubscription, setSelectedSubscription] = React.useState(null);
+            const [showNegotiationAssistant, setShowNegotiationAssistant] = React.useState(false);
+            const [selectedSubscription, setSelectedSubscription] = React.useState(null);
             const [showEmailScanner, setShowEmailScanner] = useState(false);
+            const [showCommandPalette, setShowCommandPalette] = useState(false);
             // ADD THESE LINES after your existing state declarations:
-const [showAutopilotModal, setShowAutopilotModal] = useState(false);
-const [autopilotEnabled, setAutopilotEnabled] = useState(false);
-const [autopilotSettings, setAutopilotSettings] = useState({
+            const [showAutopilotModal, setShowAutopilotModal] = useState(false);
+            const [autopilotEnabled, setAutopilotEnabled] = useState(false);
+            const [autopilotSettings, setAutopilotSettings] = useState({
     autoCancel: false,
     unusedThreshold: 60,
     priceIncreaseAlert: true,
@@ -1008,6 +1010,16 @@ useEffect(() => {
             autoSyncTransactions();
         }
     }, [user]);
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setShowCommandPalette(true);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
             
             
         
@@ -4167,6 +4179,57 @@ const deleteShareGroup = async (groupId) => {
                                  onClose={() => setShowEmailScanner(false)}
                             />
                          )}
+                         {/* Command Palette - Cmd/Ctrl + K */}
+{showCommandPalette && window.CommandPalette && (
+    <window.CommandPalette
+        subscriptions={subscriptions}
+        onCommand={(commandId) => {
+            console.log('Command triggered:', commandId);
+            
+            // Quick Actions
+            if (commandId === 'add') {
+                setShowForm(true);
+            } else if (commandId === 'scan') {
+                setShowReceiptScanner(true);
+            } else if (commandId === 'bank') {
+                setShowBankIntegration(true);
+            } else if (commandId === 'email') {
+                setShowEmailScanner(true);
+            } 
+            // Manage Views
+            else if (commandId === 'budget') {
+                setShowBudgetModal(true);
+            } else if (commandId === 'analytics') {
+                setShowChartsModal(true);
+            } else if (commandId === 'wrapped') {
+                setShowWrappedModal(true);
+            } else if (commandId === 'autopilot') {
+                setShowAutopilotModal(true);
+            } else if (commandId === 'notifications') {
+                setShowNotifications(true);
+            }
+            // Subscription actions
+            else if (commandId.startsWith('cancel-')) {
+                const subId = parseInt(commandId.replace('cancel-', ''));
+                const sub = subscriptions.find(s => s.id === subId);
+                if (sub) handleCancelSubscription(sub);
+            } else if (commandId.startsWith('negotiate-')) {
+                const subId = parseInt(commandId.replace('negotiate-', ''));
+                const sub = subscriptions.find(s => s.id === subId);
+                if (sub) {
+                    setSelectedSubscription(sub);
+                    setShowNegotiationAssistant(true);
+                }
+            } else if (commandId.startsWith('view-')) {
+                const subId = parseInt(commandId.replace('view-', ''));
+                const sub = subscriptions.find(s => s.id === subId);
+                if (sub) handleEdit(sub);
+            }
+        }}
+        onClose={() => setShowCommandPalette(false)}
+    />
+)}
+
 
                         {/* Footer */}
                         <div className="mt-12 text-center">
@@ -4175,8 +4238,8 @@ const deleteShareGroup = async (groupId) => {
                              </div>
                             <p className="text-sm text-neutral-400">© 2025 Aurabilio. Grow Smarter. Not Harder.</p>
                         </div>
-                    </div>
-            );
+                     </div>
+                )
         }
 
         ReactDOM.render(<AurabilioApp />, document.getElementById('root'));
