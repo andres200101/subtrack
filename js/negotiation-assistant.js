@@ -162,7 +162,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[70]" onClick={onClose}>
-            <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="card-frosted rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
@@ -181,7 +181,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                 {!generatedEmail && (
                     <div>
                         {/* Subscription Info */}
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-6 border-2 border-purple-200">
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-6 border-2 border-purple-200">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-1">{subscription.name}</h3>
@@ -205,10 +205,10 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                                     <button
                                         key={key}
                                         onClick={() => setSelectedStrategy(key)}
-                                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
                                             selectedStrategy === key
                                                 ? `border-${strategy.color}-500 bg-${strategy.color}-50`
-                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                : 'border-gray-200 hover:border-gray-300 card-frosted'
                                         }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -237,13 +237,13 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                                 value={customContext}
                                 onChange={(e) => setCustomContext(e.target.value)}
                                 placeholder="E.g., 'I've been a customer for 3 years' or 'I saw competitor offering same for $5 less'"
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
                                 rows="3"
                             />
                         </div>
 
                         {/* Success Examples */}
-                        <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                        <div className="mb-6 p-4 bg-green-50 rounded-2xl border border-green-200">
                             <h4 className="font-bold text-green-900 mb-2 flex items-center gap-2">
                                 💪 Success Stories
                             </h4>
@@ -258,7 +258,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                         <button
                             onClick={generateNegotiationEmail}
                             disabled={loading}
-                            className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:shadow-xl transition-all font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <>
@@ -279,7 +279,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                 {generatedEmail && (
                     <div>
                         {/* Success Header */}
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-5 mb-6">
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-5 mb-6">
                             <div className="flex items-center gap-3 text-white">
                                 <Check size={32} />
                                 <div>
@@ -290,13 +290,13 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                         </div>
 
                         {/* Email Preview */}
-                        <div className="bg-gray-50 rounded-xl p-6 mb-6 border-2 border-gray-200">
+                        <div className="bg-gray-50 rounded-2xl p-6 mb-6 border-2 border-gray-200">
                             <div className="mb-4 pb-4 border-b-2 border-gray-300">
                                 <div className="flex items-center justify-between mb-3">
                                     <span className="text-sm font-semibold text-gray-600">SUBJECT:</span>
                                     <button
                                         onClick={() => copyToClipboard(generatedEmail.subject)}
-                                        className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                                        className="text-sm text-primary-deep hover:underline flex items-center gap-1"
                                     >
                                         <Copy size={14} />
                                         Copy
@@ -310,7 +310,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                                     <span className="text-sm font-semibold text-gray-600">EMAIL BODY:</span>
                                     <button
                                         onClick={() => copyToClipboard(generatedEmail.body)}
-                                        className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                                        className="text-sm text-primary-deep hover:underline flex items-center gap-1"
                                     >
                                         <Copy size={14} />
                                         {copySuccess ? 'Copied!' : 'Copy'}
@@ -330,7 +330,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                         </div>
 
                         {/* Tips */}
-                        <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <div className="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-200">
                             <h4 className="font-bold text-blue-900 mb-2">💡 Negotiation Tips:</h4>
                             <ul className="text-sm text-blue-700 space-y-1">
                                 <li>✓ Be polite but firm - customer support wants to help</li>
@@ -345,7 +345,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                         <div className="flex gap-3">
                             <button
                                 onClick={sendEmail}
-                                className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2"
+                                className="flex-1 px-6 py-4 gradient-primary text-white rounded-2xl hover:shadow-xl transition-all font-bold flex items-center justify-center gap-2"
                             >
                                 <Mail size={20} />
                                 Open in Email
@@ -355,7 +355,7 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                                     copyToClipboard(`${generatedEmail.subject}\n\n${generatedEmail.body}`);
                                     alert('Full email copied to clipboard!');
                                 }}
-                                className="px-6 py-4 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-semibold flex items-center gap-2"
+                                className="px-6 py-4 border-2 border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors font-semibold flex items-center gap-2"
                             >
                                 <Copy size={20} />
                                 Copy All
@@ -365,13 +365,13 @@ Generate ONLY the email body, no subject line. Use a friendly but firm tone.`
                         <div className="mt-4 flex gap-2">
                             <button
                                 onClick={() => setGeneratedEmail(null)}
-                                className="flex-1 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors font-semibold"
+                                className="flex-1 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-xl transition-colors font-semibold"
                             >
                                 ← Generate Different Strategy
                             </button>
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors font-semibold"
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors font-semibold"
                             >
                                 Close
                             </button>

@@ -229,20 +229,20 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
         critical: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-900', badge: 'bg-red-600' },
         high: { bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-900', badge: 'bg-orange-600' },
         medium: { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-900', badge: 'bg-yellow-600' },
-        low: { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-900', badge: 'bg-blue-600' }
+        low: { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-900', badge: 'bg-primary-deep' }
     };
 
     const [showSettings, setShowSettings] = React.useState(false);
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[70]" onClick={onClose}>
-            <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="card-frosted rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-                            <Bell size={28} className="text-blue-600" />
+                            <Bell size={28} className="text-primary-deep" />
                             Smart Notifications
                             {notifications.length > 0 && (
                                 <span className="px-3 py-1 bg-red-600 text-white text-sm rounded-full font-bold">
@@ -255,7 +255,7 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowSettings(!showSettings)}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
                             title="Notification Settings"
                         >
                             <Settings size={24} />
@@ -268,11 +268,11 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
 
                 {/* Settings Panel */}
                 {showSettings && (
-                    <div className="mb-6 p-6 bg-gray-50 rounded-xl border-2 border-gray-200">
+                    <div className="mb-6 p-6 bg-gray-50 rounded-2xl border-2 border-gray-200">
                         <h3 className="font-bold text-gray-900 mb-4">Notification Preferences</h3>
                         <div className="space-y-3">
                             {Object.entries(notificationSettings).map(([key, value]) => (
-                                <label key={key} className="flex items-center justify-between p-3 bg-white rounded-lg cursor-pointer hover:bg-gray-50">
+                                <label key={key} className="flex items-center justify-between p-3 card-frosted rounded-xl cursor-pointer hover:bg-gray-50">
                                     <span className="text-gray-900 font-medium capitalize">
                                         {key.replace(/([A-Z])/g, ' $1').trim()}
                                     </span>
@@ -280,14 +280,14 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
                                         type="checkbox"
                                         checked={value}
                                         onChange={(e) => setNotificationSettings({...notificationSettings, [key]: e.target.checked})}
-                                        className="w-5 h-5 text-blue-600"
+                                        className="w-5 h-5 text-primary-deep"
                                     />
                                 </label>
                             ))}
                         </div>
                         <button
                             onClick={saveSettings}
-                            className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                            className="w-full mt-4 px-4 py-2 bg-primary-deep text-white rounded-xl hover:bg-blue-700 font-semibold"
                         >
                             Save Settings
                         </button>
@@ -304,14 +304,14 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
                             <button
                                 key={filterType}
                                 onClick={() => setFilter(filterType)}
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
                                     filter === filterType
-                                        ? 'bg-blue-600 text-white'
+                                        ? 'bg-primary-deep text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
                                 {filterType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                {count > 0 && <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">{count}</span>}
+                                {count > 0 && <span className="ml-2 px-2 py-0.5 card-frosted/20 rounded-full text-xs">{count}</span>}
                             </button>
                         );
                     })}
@@ -330,7 +330,7 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
                             const colors = severityColors[notification.severity];
                             
                             return (
-                                <div key={notification.id} className={`p-5 rounded-xl border-2 ${colors.bg} ${colors.border} transition-all hover:shadow-md`}>
+                                <div key={notification.id} className={`p-5 rounded-2xl border-2 ${colors.bg} ${colors.border} transition-all hover-lift`}>
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
@@ -342,7 +342,7 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
                                             <p className={`text-sm ${colors.text} mb-3`}>{notification.message}</p>
                                             {notification.subscription && (
                                                 <div className="flex items-center gap-2 text-xs text-gray-600">
-                                                    <span className="px-2 py-1 bg-white rounded text-gray-900 font-semibold">
+                                                    <span className="px-2 py-1 card-frosted rounded text-gray-900 font-semibold">
                                                         {notification.subscription.name}
                                                     </span>
                                                     <span>${notification.subscription.cost}/{notification.subscription.billing_cycle}</span>
@@ -360,12 +360,12 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleAction(notification)}
-                                            className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold text-sm transition-colors"
+                                            className="px-4 py-2 card-frosted border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-semibold text-sm transition-colors"
                                         >
                                             {notification.action}
                                         </button>
                                         {notification.severity === 'critical' && (
-                                            <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm">
+                                            <button className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold text-sm">
                                                 Act Now!
                                             </button>
                                         )}
@@ -378,7 +378,7 @@ window.NotificationsSystemComponent = function({ user, subscriptions, monthlyBud
 
                 {/* Summary Stats */}
                 {notifications.length > 0 && (
-                    <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                    <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-600 mb-1">Total Alerts</p>

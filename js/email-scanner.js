@@ -531,7 +531,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[70]" onClick={onClose}>
-            <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="card-frosted rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
@@ -560,7 +560,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                         </div>
 
                         {/* Privacy Info */}
-                        <div className="mb-8 p-6 bg-green-50 rounded-xl border-2 border-green-200">
+                        <div className="mb-8 p-6 bg-green-50 rounded-2xl border-2 border-green-200">
                             <div className="flex items-start gap-3">
                                 <Shield className="text-green-600 flex-shrink-0" size={24} />
                                 <div>
@@ -578,21 +578,21 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
 
                         {/* Benefits */}
                         <div className="grid md:grid-cols-3 gap-4 mb-8">
-                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Zap className="text-blue-600" size={20} />
+                                    <Zap className="text-primary-deep" size={20} />
                                     <h4 className="font-bold text-blue-900">Smart Detection</h4>
                                 </div>
                                 <p className="text-sm text-blue-700">AI identifies subscription receipts</p>
                             </div>
-                            <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                            <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
                                 <div className="flex items-center gap-2 mb-2">
                                     <AlertCircle className="text-purple-600" size={20} />
                                     <h4 className="font-bold text-purple-900">Zero False Positives</h4>
                                 </div>
                                 <p className="text-sm text-purple-700">Only subscription services</p>
                             </div>
-                            <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
+                            <div className="p-4 bg-orange-50 rounded-2xl border border-orange-200">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Check className="text-orange-600" size={20} />
                                     <h4 className="font-bold text-orange-900">You Control</h4>
@@ -605,7 +605,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                             <button
                                 onClick={connectGmail}
                                 disabled={loading}
-                                className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:shadow-xl transition-all font-bold text-lg disabled:opacity-50"
+                                className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg disabled:opacity-50"
                             >
                                 {loading ? 'Connecting...' : '📧 Connect Gmail'}
                             </button>
@@ -635,7 +635,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                 {/* Results */}
                 {gmailConnected && !scanning && (
                     <div>
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 mb-6">
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl p-4 mb-6">
                             <div className="flex items-center gap-3 text-white">
                                 <Check size={28} />
                                 <div>
@@ -653,7 +653,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                                     </h3>
                                     <button
                                         onClick={importAllSubscriptions}
-                                        className="px-4 py-2 gradient-orange text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm"
+                                        className="px-4 py-2 gradient-accent text-white rounded-xl hover:shadow-lg transition-all font-semibold text-sm"
                                     >
                                         Import All
                                     </button>
@@ -661,7 +661,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
 
                                 <div className="space-y-3">
                                     {detectedSubs.map((sub, idx) => (
-                                        <div key={idx} className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all">
+                                        <div key={idx} className="p-4 border-2 border-gray-200 rounded-2xl hover:border-blue-300 transition-all">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
@@ -678,7 +678,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                                                     <div className="flex items-center gap-6 text-sm mb-2">
                                                         <div>
                                                             <span className="text-gray-600">Cost: </span>
-                                                            <span className="font-bold text-blue-600">${sub.cost}</span>
+                                                            <span className="font-bold text-primary-deep">${sub.cost}</span>
                                                         </div>
                                                         <div>
                                                             <span className="text-gray-600">Billing: </span>
@@ -691,13 +691,13 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => importSubscription(sub)}
-                                                    className="flex-1 px-4 py-2 gradient-blue text-white rounded-lg hover:shadow-lg transition-all font-semibold text-sm"
+                                                    className="flex-1 px-4 py-2 gradient-primary text-white rounded-xl hover:shadow-lg transition-all font-semibold text-sm"
                                                 >
                                                     ✓ Import
                                                 </button>
                                                 <button
                                                     onClick={() => ignoreSubscription(sub.name)}
-                                                    className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-sm"
+                                                    className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold text-sm"
                                                 >
                                                     Ignore
                                                 </button>
@@ -717,7 +717,7 @@ window.EmailScannerComponent = function({ user, supabase, onSubscriptionsImporte
                                 </p>
                                 <button
                                     onClick={() => scanGmailForReceipts(accessToken)}
-                                    className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                                    className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
                                 >
                                     <RefreshCw size={16} className="inline mr-2" />
                                     Scan Again

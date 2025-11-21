@@ -131,7 +131,7 @@ window.ReceiptScannerComponent = function({ onReceiptScanned, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[70]" onClick={onClose}>
-            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl receipt-scanner-container" onClick={(e) => e.stopPropagation()}>
+            <div className="card-frosted rounded-2xl p-8 max-w-2xl w-full shadow-2xl receipt-scanner-container" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
@@ -146,7 +146,7 @@ window.ReceiptScannerComponent = function({ onReceiptScanned, onClose }) {
 
                 {!previewImage && !isScanning && (
                     <div
-                        className={`receipt-upload-zone p-12 rounded-xl text-center cursor-pointer ${isDragging ? 'dragging' : ''}`}
+                        className={`receipt-upload-zone p-12 rounded-2xl text-center cursor-pointer ${isDragging ? 'dragging' : ''}`}
                         onClick={() => fileInputRef.current.click()}
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
@@ -178,7 +178,7 @@ window.ReceiptScannerComponent = function({ onReceiptScanned, onClose }) {
                         
                         {previewImage && (
                             <div className="mt-6 relative">
-                                <img src={previewImage} alt="Receipt preview" className="receipt-preview mx-auto rounded-lg" />
+                                <img src={previewImage} alt="Receipt preview" className="receipt-preview mx-auto rounded-xl" />
                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent scanning-animation"></div>
                             </div>
                         )}
@@ -186,32 +186,32 @@ window.ReceiptScannerComponent = function({ onReceiptScanned, onClose }) {
                 )}
 
                 {extractedData && !isScanning && (
-                    <div className="bg-white rounded-xl p-6">
+                    <div className="card-frosted rounded-2xl p-6">
                         <div className="flex items-center gap-2 mb-4 text-green-600">
                             <div className="success-checkmark text-4xl">✓</div>
                             <h3 className="text-xl font-bold">Data Extracted!</h3>
                         </div>
 
                         {previewImage && (
-                            <img src={previewImage} alt="Receipt" className="w-full h-40 object-cover rounded-lg mb-4" />
+                            <img src={previewImage} alt="Receipt" className="w-full h-40 object-cover rounded-xl mb-4" />
                         )}
 
                         <div className="space-y-3 mb-6">
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                                 <span className="text-gray-600 font-medium">Service Name:</span>
-                                <span className="font-bold text-brand-text">{extractedData.name || 'Not detected'}</span>
+                                <span className="font-bold text-primary-text">{extractedData.name || 'Not detected'}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                                 <span className="text-gray-600 font-medium">Cost:</span>
-                                <span className="font-bold text-brand-orange">${extractedData.cost || '0.00'}</span>
+                                <span className="font-bold text-primary-orange">${extractedData.cost || '0.00'}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                                 <span className="text-gray-600 font-medium">Billing Cycle:</span>
-                                <span className="font-bold text-brand-blue">{extractedData.billing_cycle}</span>
+                                <span className="font-bold text-primary-blue">{extractedData.billing_cycle}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                                 <span className="text-gray-600 font-medium">Category:</span>
-                                <span className="font-bold text-brand-turquoise">{extractedData.category}</span>
+                                <span className="font-bold text-primary-turquoise">{extractedData.category}</span>
                             </div>
                         </div>
 
@@ -221,7 +221,7 @@ window.ReceiptScannerComponent = function({ onReceiptScanned, onClose }) {
                                     onReceiptScanned(extractedData);
                                     onClose();
                                 }}
-                                className="flex-1 gradient-orange text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                                className="flex-1 gradient-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
                             >
                                 ✓ Use This Data
                             </button>
@@ -230,7 +230,7 @@ window.ReceiptScannerComponent = function({ onReceiptScanned, onClose }) {
                                     setPreviewImage(null);
                                     setExtractedData(null);
                                 }}
-                                className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                                className="px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
                             >
                                 Scan Another
                             </button>

@@ -46,7 +46,7 @@ app.post('/api/create_link_token', async (req, res) => {
       user: {
         client_user_id: req.body.user_id || 'user-id',
       },
-      client_name: 'SubTrack',
+      client_name: 'Aurabilio',
       products: ['transactions'],
       country_codes: ['US'],
       language: 'en',

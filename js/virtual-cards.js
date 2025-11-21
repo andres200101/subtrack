@@ -68,10 +68,10 @@ window.VirtualCardsComponent = function({ subscription, onUpdate, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[70]" onClick={onClose}>
-            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="card-frosted rounded-2xl p-8 max-w-2xl w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-brand-text mb-1 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-primary-text mb-1 flex items-center gap-2">
                             💳 Virtual Card Manager
                         </h2>
                         <p className="text-gray-600">Manage virtual card for {subscription?.name}</p>
@@ -84,33 +84,33 @@ window.VirtualCardsComponent = function({ subscription, onUpdate, onClose }) {
                 {!cardNumber && !isGenerating && (
                     <div className="text-center py-12">
                         <div className="text-6xl mb-4">💳</div>
-                        <h3 className="text-xl font-bold text-brand-text mb-2">
+                        <h3 className="text-xl font-bold text-primary-text mb-2">
                             No Virtual Card Yet
                         </h3>
                         <p className="text-gray-600 mb-6">
                             Generate a virtual card for this subscription to:
                         </p>
                         <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
-                            <div className="p-4 bg-green-50 rounded-lg text-left">
+                            <div className="p-4 bg-green-50 rounded-xl text-left">
                                 <p className="text-sm font-semibold text-green-700 mb-1">✓ Auto-Cancel</p>
                                 <p className="text-xs text-green-600">Pause card when trial ends</p>
                             </div>
-                            <div className="p-4 bg-blue-50 rounded-lg text-left">
+                            <div className="p-4 bg-blue-50 rounded-xl text-left">
                                 <p className="text-sm font-semibold text-blue-700 mb-1">✓ Security</p>
-                                <p className="text-xs text-blue-600">Unique card per service</p>
+                                <p className="text-xs text-primary-deep">Unique card per service</p>
                             </div>
-                            <div className="p-4 bg-purple-50 rounded-lg text-left">
+                            <div className="p-4 bg-purple-50 rounded-xl text-left">
                                 <p className="text-sm font-semibold text-purple-700 mb-1">✓ Control</p>
                                 <p className="text-xs text-purple-600">Pause/resume anytime</p>
                             </div>
-                            <div className="p-4 bg-orange-50 rounded-lg text-left">
+                            <div className="p-4 bg-orange-50 rounded-xl text-left">
                                 <p className="text-sm font-semibold text-orange-700 mb-1">✓ Track</p>
                                 <p className="text-xs text-orange-600">See all charges</p>
                             </div>
                         </div>
                         <button
                             onClick={generateVirtualCard}
-                            className="px-8 py-4 gradient-blue text-white rounded-xl hover:shadow-xl transition-all font-bold text-lg"
+                            className="px-8 py-4 gradient-primary text-white rounded-2xl hover:shadow-xl transition-all font-bold text-lg"
                         >
                             Generate Virtual Card
                         </button>
@@ -172,20 +172,20 @@ window.VirtualCardsComponent = function({ subscription, onUpdate, onClose }) {
 
                         {/* Card Controls */}
                         <div className="space-y-4 mb-6">
-                            <div className="p-4 bg-gray-50 rounded-lg">
-                                <h4 className="font-semibold text-brand-text mb-2">Card Controls</h4>
+                            <div className="p-4 bg-gray-50 rounded-xl">
+                                <h4 className="font-semibold text-primary-text mb-2">Card Controls</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {cardStatus === 'active' && (
                                         <>
                                             <button
                                                 onClick={pauseCard}
-                                                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all font-semibold text-sm"
+                                                className="px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-all font-semibold text-sm"
                                             >
                                                 ⏸️ Pause Card
                                             </button>
                                             <button
                                                 onClick={cancelCard}
-                                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold text-sm"
+                                                className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all font-semibold text-sm"
                                             >
                                                 ❌ Cancel Card
                                             </button>
@@ -194,7 +194,7 @@ window.VirtualCardsComponent = function({ subscription, onUpdate, onClose }) {
                                     {cardStatus === 'paused' && (
                                         <button
                                             onClick={reactivateCard}
-                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-semibold text-sm"
+                                            className="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all font-semibold text-sm"
                                         >
                                             ▶️ Reactivate Card
                                         </button>
@@ -204,16 +204,16 @@ window.VirtualCardsComponent = function({ subscription, onUpdate, onClose }) {
                                             navigator.clipboard.writeText(cardNumber.replace(/-/g, ''));
                                             alert('Card number copied!');
                                         }}
-                                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all font-semibold text-sm"
+                                        className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-primary-deep transition-all font-semibold text-sm"
                                     >
                                         📋 Copy Number
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
                                 <div className="flex items-start gap-3">
-                                    <Info className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+                                    <Info className="text-primary-deep flex-shrink-0 mt-0.5" size={20} />
                                     <div className="text-sm text-blue-800">
                                         <p className="font-semibold mb-1">How it works:</p>
                                         <ul className="space-y-1 text-blue-700">
@@ -229,7 +229,7 @@ window.VirtualCardsComponent = function({ subscription, onUpdate, onClose }) {
 
                         <button
                             onClick={onClose}
-                            className="w-full px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                            className="w-full px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
                         >
                             Close
                         </button>
