@@ -27,7 +27,9 @@
     <!-- NEW COMPONENTS -->
     <script type="text/babel" src="js/slide-out-panel.js"></script>
     <script type="text/babel" src="js/enhanced-trial-cards.js"></script>
-     <script type="text/babel" src="js/advanced-dashboard.js"></script>
+    <script type="text/babel" src="js/advanced-dashboard.js"></script>
+    <!-- Masonry Grid Component -->
+    <script type="text/babel" src="js/masonry-grid.js"></script>
     <link rel="stylesheet" href="css/automation-suite.css">
     <link rel="stylesheet" href="css/theme.css">
     <script>
@@ -3112,78 +3114,95 @@ const deleteShareGroup = async (groupId) => {
                                 </div>
                             )}
 
-                            {/* Regular Subscriptions List */}
-                            {regularSubs.length > 0 && (
-                                <div className="space-y-3">
-                                    {regularSubs.map(sub => (
-                                        <div key={sub.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-primary-bright/10">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-1">
-                                                    <h3 className="font-semibold text-primary-text">{sub.name}</h3>
-                                                    <span className="px-2.5 py-1 bg-primary-turquoise/10 text-primary-turquoise text-xs rounded-full font-medium">
-                                                        {sub.category}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-gray-600">
-                                                    <span className="font-semibold">${sub.cost}</span> / {sub.billing_cycle} 
-                                                    {sub.next_billing_date && ` • Next: ${formatDate(sub.next_billing_date)}`}
-                                                </p>
-                                                {sub.description && (
-                                                    <p className="text-xs text-gray-500 mt-1">{sub.description}</p>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {/* NEW - Virtual Card Button */}
-    <button
-        onClick={() => {
-            setSelectedSubForCard(sub);
-            setShowVirtualCardModal(true);
-        }}
-        disabled={loading}
-        className="p-2 text-gray-600 hover:text-purple-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
-        title="Manage Virtual Card"
-    >
-        💳
-    </button>
-     {/* ADD THIS - Negotiation Assistant Button */}
-    <button
-        onClick={() => {
+                            {/* Masonry Grid */}
+{subscriptions.length > 0 && window.MasonryGrid && (
+    <window.MasonryGrid
+        subscriptions={subscriptions.filter(s => s.type !== 'trial')}
+        trials={trials}
+        onEdit={handleEdit}
+        onCancel={handleCancelSubscription}
+        onDelete={handleDelete}
+        onNegotiate={(sub) => {
             setSelectedSubscription(sub);
             setShowNegotiationAssistant(true);
         }}
-        disabled={loading}
-        className="p-2 text-gray-600 hover:text-purple-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
-        title="Negotiate Price"
-    >
-        ✨
-    </button>
-                                                <button
-                                                    onClick={() => handleEdit(sub)}
-                                                    disabled={loading}
-                                                    className="p-2 text-gray-600 hover:text-primary-blue hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleCancelSubscription(sub)}
-                                                    disabled={loading}
-                                                    className="p-2 text-gray-600 hover:text-yellow-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
-                                                    title="Cancel Subscription"
-                                                >
-                                                    <X size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(sub.id)}
-                                                    disabled={loading}
-                                                    className="p-2 text-gray-600 hover:text-red-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+        calculateMonthlyEquivalent={calculateMonthlyEquivalent}
+        getDaysRemaining={getDaysRemaining}
+        formatDate={formatDate}
+        loading={loading}
+    />
+)}
+
+{/* Regular Subscriptions List - FALLBACK if component not loaded */}
+{(!window.MasonryGrid && regularSubs.length > 0) && (
+    <div className="space-y-3">
+        {regularSubs.map(sub => (
+            <div key={sub.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-primary-bright/10">
+                <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-semibold text-primary-text">{sub.name}</h3>
+                        <span className="px-2.5 py-1 bg-primary-turquoise/10 text-primary-turquoise text-xs rounded-full font-medium">
+                            {sub.category}
+                        </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                        <span className="font-semibold">${sub.cost}</span> / {sub.billing_cycle} 
+                        {sub.next_billing_date && ` • Next: ${formatDate(sub.next_billing_date)}`}
+                    </p>
+                    {sub.description && (
+                        <p className="text-xs text-gray-500 mt-1">{sub.description}</p>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            setSelectedSubForCard(sub);
+                            setShowVirtualCardModal(true);
+                        }}
+                        disabled={loading}
+                        className="p-2 text-gray-600 hover:text-purple-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
+                        title="Manage Virtual Card"
+                    >
+                        💳
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSelectedSubscription(sub);
+                            setShowNegotiationAssistant(true);
+                        }}
+                        disabled={loading}
+                        className="p-2 text-gray-600 hover:text-purple-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
+                        title="Negotiate Price"
+                    >
+                        ✨
+                    </button>
+                    <button
+                        onClick={() => handleEdit(sub)}
+                        disabled={loading}
+                        className="p-2 text-gray-600 hover:text-primary-blue hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
+                    >
+                        <Edit2 size={18} />
+                    </button>
+                    <button
+                        onClick={() => handleCancelSubscription(sub)}
+                        disabled={loading}
+                        className="p-2 text-gray-600 hover:text-yellow-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
+                        title="Cancel Subscription"
+                    >
+                        <X size={18} />
+                    </button>
+                    <button
+                        onClick={() => handleDelete(sub.id)}
+                        disabled={loading}
+                        className="p-2 text-gray-600 hover:text-red-600 hover:card-frosted rounded-xl transition-colors disabled:opacity-50"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                </div>
+            </div>
+        ))}
+    </div>
+)}
                         </div>
                         {/* Savings Modal */}
                         {showSavingsModal && (
