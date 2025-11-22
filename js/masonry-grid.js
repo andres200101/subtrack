@@ -1,9 +1,10 @@
 // Masonry Grid Component for Aurabilio
 // Provides a beautiful, Pinterest-style layout for subscriptions
 
-window.MasonryGrid = ({ subscriptions, trials, onEdit, onCancel, onDelete, onNegotiate, onViewHistory, calculateMonthlyEquivalent, getDaysRemaining, formatDate }) => {
-    const [hoveredCard, setHoveredCard] = React.useState(null);
-    const [viewMode, setViewMode] = React.useState('masonry'); // 'masonry' or 'list'
+window.MasonryGrid = ({ subscriptions, trials, onEdit, onCancel, onDelete, onNegotiate, calculateMonthlyEquivalent, getDaysRemaining, formatDate, loading }) => {
+    const { useState } = React;
+    const [hoveredCard, setHoveredCard] = useState(null);
+    const [viewMode, setViewMode] = useState('masonry'); // 'masonry' or 'list'
 
     // Color schemes for different categories
     const categoryColors = {
@@ -243,6 +244,20 @@ window.MasonryGrid = ({ subscriptions, trials, onEdit, onCancel, onDelete, onNeg
                         <line x1="3" y1="18" x2="3.01" y2="18"/>
                     </svg>
                     List View
+                </button>
+                <button
+                    onClick={() => setViewMode('timeline')}
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                        viewMode === 'timeline'
+                            ? 'gradient-primary text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                    <svg className="inline-block w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Timeline View
                 </button>
             </div>
 
