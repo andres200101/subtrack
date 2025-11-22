@@ -91,9 +91,9 @@
     --text-5xl: 3rem;
     
     /* Layout */
-    --sidebar-width: 280px;
+    --sidebar-width: 260px;
     --topbar-height: 64px;
-    --quick-stats-width: 320px;
+    --quick-stats-width: 280px;
     
     /* Transitions */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);

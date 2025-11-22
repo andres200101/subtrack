@@ -232,18 +232,18 @@ window.TimelineView = ({ subscriptions, trials, onEdit, onCancel, onDelete, calc
                                         isLeft ? 'from-transparent to-gray-300' : 'from-gray-300 to-transparent'
                                     }`}></div>
 
-                                    {/* DATE CIRCLE */}
+                                    {/* DATE CIRCLE - SMALLER */}
                                     <div className="relative z-10 flex-shrink-0">
-                                        <div className={`w-48 h-48 rounded-full bg-gradient-to-br ${categoryColor.gradient} shadow-2xl flex flex-col items-center justify-center text-white transform ${
+                                        <div className={`w-32 h-32 rounded-full bg-gradient-to-br ${categoryColor.gradient} shadow-xl flex flex-col items-center justify-center text-white transform ${
                                             hoveredEvent === event.id ? 'scale-110 rotate-6' : 'scale-100'
                                         } transition-all duration-300`}>
-                                            <div className="text-6xl mb-2">{categoryColor.icon}</div>
-                                            <p className="text-4xl font-black">
+                                            <div className="text-3xl mb-1">{categoryColor.icon}</div>
+                                            <p className="text-xl font-black">
                                                 {event.daysUntil === 0 ? 'TODAY' : 
                                                  event.daysUntil === 1 ? '1 DAY' :
-                                                 `${event.daysUntil} DAYS`}
+                                                 `${event.daysUntil}d`}
                                             </p>
-                                            <p className="text-sm opacity-90 font-semibold">
+                                            <p className="text-xs opacity-90 font-semibold">
                                                 {event.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                             </p>
                                         </div>

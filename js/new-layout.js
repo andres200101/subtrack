@@ -5,6 +5,7 @@ window.AurabilioLayout = ({ children, user, totalMonthly, totalYearly, subscript
     const { useState } = React;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [statsOpen, setStatsOpen] = useState(true);
 
     // Calculate stats
     const activeCount = subscriptions.length;
