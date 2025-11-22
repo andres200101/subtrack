@@ -463,6 +463,7 @@ const Logo = ({ size = 40, className = '' }) => {
             const [selectedSubscription, setSelectedSubscription] = React.useState(null);
             const [showEmailScanner, setShowEmailScanner] = useState(false);
             const [showCommandPalette, setShowCommandPalette] = useState(false);
+
             // ADD THESE LINES after your existing state declarations:
             const [showAutopilotModal, setShowAutopilotModal] = useState(false);
             const [autopilotEnabled, setAutopilotEnabled] = useState(false);
@@ -3116,23 +3117,28 @@ const deleteShareGroup = async (groupId) => {
                                 </div>
                             )}
 
-                            {/* Masonry Grid */}
-{subscriptions.length > 0 && window.MasonryGrid && (
-    <window.MasonryGrid
-        subscriptions={subscriptions.filter(s => s.type !== 'trial')}
-        trials={trials}
-        onEdit={handleEdit}
-        onCancel={handleCancelSubscription}
-        onDelete={handleDelete}
-        onNegotiate={(sub) => {
-            setSelectedSubscription(sub);
-            setShowNegotiationAssistant(true);
-        }}
-        calculateMonthlyEquivalent={calculateMonthlyEquivalent}
-        getDaysRemaining={getDaysRemaining}
-        formatDate={formatDate}
-        loading={loading}
-    />
+{/* View Rendering */}
+{subscriptions.length > 0 && (
+    <>
+        {/* The MasonryGrid component handles Grid and List views internally */}
+        {window.MasonryGrid && (
+            <window.MasonryGrid
+                subscriptions={subscriptions.filter(s => s.type !== 'trial')}
+                trials={trials}
+                onEdit={handleEdit}
+                onCancel={handleCancelSubscription}
+                onDelete={handleDelete}
+                onNegotiate={(sub) => {
+                    setSelectedSubscription(sub);
+                    setShowNegotiationAssistant(true);
+                }}
+                calculateMonthlyEquivalent={calculateMonthlyEquivalent}
+                getDaysRemaining={getDaysRemaining}
+                formatDate={formatDate}
+                loading={loading}
+            />
+        )}
+    </>
 )}
 
 {/* Regular Subscriptions List - FALLBACK if component not loaded */}
