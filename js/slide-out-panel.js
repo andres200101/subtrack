@@ -1,7 +1,5 @@
 // ==============================================
 // SLIDE-OUT PANEL - slide-out-panel.js
-// Save as: js/slide-out-panel.js
-// Add to index.html: <script type="text/babel" src="js/slide-out-panel.js"></script>
 // ==============================================
 
 window.SlideOutPanelComponent = function({ 
@@ -10,14 +8,13 @@ window.SlideOutPanelComponent = function({
     title,
     subtitle,
     children,
-    size = 'medium' // 'small' (400px), 'medium' (600px), 'large' (800px)
+    size = 'medium'
 }) {
     const [isAnimating, setIsAnimating] = React.useState(false);
     
     React.useEffect(() => {
         if (isOpen) {
             setIsAnimating(true);
-            // Lock body scroll when panel is open
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -106,7 +103,6 @@ window.SlideOutPanelComponent = function({
                 }
             `}</style>
 
-            {/* Backdrop */}
             <div 
                 className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] ${
                     isOpen ? 'overlay-enter' : 'overlay-exit'
@@ -117,14 +113,12 @@ window.SlideOutPanelComponent = function({
                 }}
             />
 
-            {/* Panel */}
             <div 
                 className={`fixed top-0 right-0 bottom-0 w-full ${sizeClasses[size]} bg-white shadow-2xl z-[91] flex flex-col ${
                     isOpen ? 'slide-panel-enter' : 'slide-panel-exit'
                 }`}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b-2 border-gray-200 bg-gradient-to-r from-primary-deep to-primary-astronaut">
                     <div className="flex-1 pr-4">
                         <h2 className="text-2xl font-bold text-white mb-1">
@@ -145,12 +139,10 @@ window.SlideOutPanelComponent = function({
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
                     {children}
                 </div>
 
-                {/* Footer hint */}
                 <div className="p-4 bg-gray-50 border-t border-gray-200">
                     <p className="text-xs text-gray-500 text-center">
                         Press <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-mono">esc</kbd> to close
@@ -161,5 +153,4 @@ window.SlideOutPanelComponent = function({
     );
 };
 
-// Make it available globally
 window.SlideOutPanel = window.SlideOutPanelComponent;
