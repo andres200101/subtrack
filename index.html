@@ -27,6 +27,7 @@
     <!-- NEW COMPONENTS -->
     <script type="text/babel" src="js/slide-out-panel.js"></script>
     <script type="text/babel" src="js/enhanced-trial-cards.js"></script>
+    <script type="text/babel" src="js/advanced-dashboard.js"></script>
     <link rel="stylesheet" href="css/automation-suite.css">
     <link rel="stylesheet" href="css/theme.css">
     <script>
@@ -1961,57 +1962,22 @@ const deleteShareGroup = async (groupId) => {
                                 </div>
                             </div>
                         )}
-                        {/* Stats Cards */}
-                        <div className="card-frosted rounded-2xl p-6 hover-lift border border-primary-bright/10">
-    <div className="flex items-center justify-between mb-2">
-        <span className="text-neutral-600 text-sm font-medium">Monthly Total</span>
-        <div className="p-2 bg-primary-bright/10 rounded-2xl">
-            <DollarSign className="text-primary-light" size={20} />
-        </div>
-    </div>
-    <p className="text-3xl font-bold text-primary-deep">${totalMonthly.toFixed(2)}</p>
-                                {monthlyBudget && (
-                                    <p className="text-xs text-gray-500 mt-1">of ${monthlyBudget.toFixed(2)} budget</p>
-                                )}
-                            </div>
-
-                            <div className="card-frosted rounded-2xl shadow-sm p-6 border border-primary-bright/10 hover-lift transition-shadow">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-600 text-sm font-medium">Yearly Total</span>
-                                    <div className="p-2 bg-primary-orange/10 rounded-xl">
-                                        <TrendingUp className="text-primary-orange" size={20} />
-                                    </div>
-                                </div>
-                                <p className="text-3xl font-bold text-primary-text">${totalYearly.toFixed(2)}</p>
-                            </div>
-
-                            <div className="card-frosted rounded-2xl shadow-sm p-6 border border-primary-bright/10 hover-lift transition-shadow">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-600 text-sm font-medium">Active Subscriptions</span>
-                                    <div className="p-2 bg-primary-success/10 rounded-xl">
-                                        <Calendar className="text-primary-success" size={20} />
-                                    </div>
-                                </div>
-                                <p className="text-3xl font-bold text-primary-text">
-                                    {subscriptions.length}
-                                    {!isPro && <span className="text-gray-500 text-lg"> / 5</span>}
-                                </p>
-                            </div>
-
-                            <div 
-                                className="card-frosted rounded-2xl shadow-sm p-6 border border-primary-bright/10 hover-lift transition-shadow cursor-pointer"
-                                onClick={() => cancelledSubscriptions.length > 0 && setShowSavingsModal(true)}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-600 text-sm font-medium">Money Saved</span>
-                                    <div className="p-2 bg-green-100 rounded-xl">
-                                        <TrendingDown className="text-green-600" size={20} />
-                                    </div>
-                                </div>
-                                <p className="text-3xl font-bold text-green-600">${calculateSavings().yearly.toFixed(2)}</p>
-                                <p className="text-xs text-gray-500 mt-1">per year</p>
-                            </div>
-                        </div>
+                        {/* Advanced Dashboard */}
+                        {window.AdvancedDashboard && (
+                            <window.AdvancedDashboard
+                                subscriptions={subscriptions}
+                                trials={trials}
+                                totalMonthly={totalMonthly}
+                                totalYearly={totalYearly}
+                                monthlyBudget={monthlyBudget}
+                                user={user}
+                                isPro={isPro}
+                                onUpgrade={handleUpgrade}
+                                calculateSavings={calculateSavings}
+                                getCategoryData={getCategoryData}
+                                calculateMonthlyEquivalent={calculateMonthlyEquivalent}
+                            />
+                        )}
 
                         {/* BUDGET TRACKER SECTION */}
                         {monthlyBudget ? (() => {
@@ -4242,8 +4208,9 @@ const deleteShareGroup = async (groupId) => {
                             <p className="text-sm text-neutral-400">© 2025 Aurabilio. Grow Smarter. Not Harder.</p>
                         </div>
                      </div>
+                 </div>
                 )
-        }
+            }
 
         ReactDOM.render(<AurabilioApp />, document.getElementById('root'));
     </script>
