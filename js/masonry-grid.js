@@ -261,8 +261,21 @@ window.MasonryGrid = ({ subscriptions, trials, onEdit, onCancel, onDelete, onNeg
                 </button>
             </div>
 
-            {/* Masonry Grid */}
-            {viewMode === 'masonry' ? (
+            {/* Render based on view mode */}
+            {viewMode === 'timeline' && window.TimelineView ? (
+                /* Timeline View - Completely Different Component */
+                <window.TimelineView
+                    subscriptions={subscriptions}
+                    trials={trials}
+                    onEdit={onEdit}
+                    onCancel={onCancel}
+                    onDelete={onDelete}
+                    calculateMonthlyEquivalent={calculateMonthlyEquivalent}
+                    getDaysRemaining={getDaysRemaining}
+                    formatDate={formatDate}
+                />
+            ) : viewMode === 'masonry' ? (
+                /* Masonry Grid */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-min">
                     {/* Trials First */}
                     {trials.map((trial, index) => (
