@@ -936,29 +936,27 @@ useEffect(() => {
     }
 }, [user]);
 // Check if bank is connected and show indicator
-useEffect(() => {
-    const checkBankConnection = async () => {
-        if (!user || !supabase) return;
-        
-        try {
+    useEffect(() => {
+        const checkBankConnection = async () => {
+            if (!user || !supabase) return;
+            
             const { data } = await supabase
                 .from('bank_connections')
                 .select('*')
-                .eq('user_id', user.id);
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .single();
             
-            // Filter for active connections
-            const activeConnection = data?.find(conn => conn.status === 'active');
-            
-            if (activeConnection) {
-                console.log('Bank connected:', activeConnection.institution_name);
+            if (data) {
+                // User has connected bank
+                console.log('Bank connected:', data.institution_name);
+                // You could set a state here to show a badge
+                // setBankConnected(true);
             }
-        } catch (error) {
-            console.error('Error checking bank connection:', error);
-        }
-    };
-    
-    checkBankConnection();
-}, [user, supabase]);
+        };
+        
+        checkBankConnection();
+    }, [user, supabase]);
     
     // Helper functions
     const getDateDaysAgo = (days) => {
@@ -973,18 +971,17 @@ useEffect(() => {
     
     // Auto-sync transactions daily
     const autoSyncTransactions = async () => {
-    if (!user || !supabase) return;
-    
-    try {
-        const { data: connections } = await supabase
-            .from('bank_connections')
-            .select('*')
-            .eq('user_id', user.id);
+        if (!user || !supabase) return;
         
-        // Find active connection
-        const connection = connections?.find(conn => conn.status === 'active');
-        
-        if (!connection) return;
+        try {
+            const { data: connection } = await supabase
+                .from('bank_connections')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .single();
+            
+            if (!connection) return;
             
             // Check if last sync was more than 24 hours ago
             const lastSync = new Date(connection.last_synced || connection.connected_at);
@@ -2002,7 +1999,7 @@ const deleteShareGroup = async (groupId) => {
                                 <p className="text-xs text-gray-500 mt-1">per year</p>
                             </div>
                         </div>
-                    )
+                    );
 
                     {/* BUDGET TRACKER SECTION */}
                         {monthlyBudget ? (() => {
