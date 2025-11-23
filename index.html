@@ -27,7 +27,8 @@
     <!-- NEW COMPONENTS -->
     <script type="text/babel" src="js/slide-out-panel.js"></script>
     <script type="text/babel" src="js/enhanced-trial-cards.js"></script>
-    <script type="text/babel" src="js/advanced-dashboard.js"></script>
+    <!-- Ultimate Dashboard -->
+    <script type="text/babel" src="js/ultimate-dashboard.js"></script>
     <!-- Masonry Grid Component -->
     <script type="text/babel" src="js/masonry-grid.js"></script>
     <!-- Timeline View Component -->
@@ -465,6 +466,7 @@ const Logo = ({ size = 40, className = '' }) => {
             const [selectedSubscription, setSelectedSubscription] = React.useState(null);
             const [showEmailScanner, setShowEmailScanner] = useState(false);
             const [showCommandPalette, setShowCommandPalette] = useState(false);
+            const [currentView, setCurrentView] = useState('dashboard');
 
             // ADD THESE LINES after your existing state declarations:
             const [showAutopilotModal, setShowAutopilotModal] = useState(false);
@@ -1787,6 +1789,34 @@ const deleteShareGroup = async (groupId) => {
                         )}
                     </div>
                 </div>
+                {/* ADD THIS - Ultimate Dashboard */}
+            {!showForm && subscriptions.length > 0 && (
+                <div className="mb-8">
+                    <window.UltimateDashboard
+                        user={user}
+                        subscriptions={subscriptions}
+                        trials={trials}
+                        totalMonthly={totalMonthly}
+                        totalYearly={totalYearly}
+                        monthlyBudget={monthlyBudget}
+                        cancelledSubscriptions={cancelledSubscriptions}
+                        isPro={isPro}
+                        calculateMonthlyEquivalent={calculateMonthlyEquivalent}
+                        getDaysRemaining={getDaysRemaining}
+                        formatDate={formatDate}
+                        onNavigate={(view) => console.log('Navigate to:', view)}
+                        onAddNew={() => setShowForm(true)}
+                        onScanEmail={() => setShowEmailScanner(true)}
+                        onScanReceipt={() => setShowReceiptScanner(true)}
+                        onConnectBank={() => setShowBankIntegration(true)}
+                        onEnableAutopilot={() => setShowAutopilotModal(true)}
+                        onViewAnalytics={() => setShowChartsModal(true)}
+                        onSetBudget={() => setShowBudgetModal(true)}
+                        onViewSharing={() => setShowSharingModal(true)}
+                        onUpgrade={handleUpgrade}
+                    />
+                </div>
+            )}
                 <div className="flex items-center gap-3">
                     {!isPro && (
                         <button
