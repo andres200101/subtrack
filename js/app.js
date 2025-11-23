@@ -348,7 +348,31 @@ function AurabilioApp() {
     const renderContent = () => {
         switch (currentView) {
             case 'dashboard':
-                return (
+                return window.UltimateDashboard ? (
+                    <window.UltimateDashboard
+                        user={user}
+                        subscriptions={subscriptions}
+                        trials={trials}
+                        totalMonthly={totalMonthly}
+                        totalYearly={totalYearly}
+                        monthlyBudget={null}
+                        cancelledSubscriptions={[]}
+                        onNavigate={setCurrentView}
+                        onAddNew={() => setCurrentView('subscriptions')}
+                        onScanEmail={() => console.log('Open email scanner')}
+                        onScanReceipt={() => console.log('Open receipt scanner')}
+                        onConnectBank={() => console.log('Open bank integration')}
+                        onEnableAutopilot={() => console.log('Open autopilot')}
+                        onViewAnalytics={() => setCurrentView('analytics')}
+                        onSetBudget={() => console.log('Open budget modal')}
+                        onViewSharing={() => console.log('Open sharing')}
+                        onUpgrade={() => console.log('Open upgrade modal')}
+                        isPro={isPro}
+                        calculateMonthlyEquivalent={window.helpers?.calculateMonthlyEquivalent}
+                        getDaysRemaining={window.helpers?.getDaysRemaining}
+                        formatDate={window.helpers?.formatDate}
+                    />
+                ) : (
                     <div className="space-y-6">
                         <div className="text-center py-8">
                             <h1 className="text-4xl font-black mb-4 text-tangaroa">Dashboard Overview</h1>

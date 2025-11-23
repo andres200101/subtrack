@@ -10,7 +10,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/images/aurabilio.svg">
     
-    <!-- External Dependencies -->
+    <!-- External Dependencies - Core Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -41,30 +41,49 @@
                         'catskill-white': '#f7fbfb',
                         'tangaroa': '#03093b',
                         'lynch': '#6f7d9e',
-                        'rhino': '#282f58'
+                        'rhino': '#282f58',
+                        'picton-blue': '#3b82f6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
                     }
                 }
             }
         }
     </script>
     
-    <!-- Stylesheets -->
+    <!-- Stylesheets - Load in Order -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/typography.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/automation-suite.css">
 </head>
-<body class="bg-catskill-white">
+<body class="bg-catskill-white antialiased">
     <!-- React Root -->
     <div id="root"></div>
     
-    <!-- Utils (Load First) -->
-    <script type="text/babel" src="js/utils/helpers.js"></script>
-    <script type="text/babel" src="js/utils/constants.js"></script>
+    <!-- ============================================ -->
+    <!-- JAVASCRIPT LOAD ORDER (Critical!)           -->
+    <!-- ============================================ -->
     
-    <!-- Existing Components -->
-    <script type="text/babel" src="js/slide-out-panel.js"></script>
+    <!-- 1. UTILITIES - Load First (No Dependencies) -->
+    <script type="text/babel" src="js/helpers.js"></script>
+    
+    <!-- 2. CORE VIEW COMPONENTS - Main Pages -->
+    <script type="text/babel" src="js/subscriptions.js"></script>
+    <script type="text/babel" src="js/trials.js"></script>
+    <script type="text/babel" src="js/analytics.js"></script>
+    
+    <!-- 3. ADVANCED VIEW COMPONENTS -->
+    <script type="text/babel" src="js/masonry-grid.js"></script>
+    <script type="text/babel" src="js/timeline-view.js"></script>
+    <script type="text/babel" src="js/ultimate-dashboard.js"></script>
+    
+    <!-- 4. UI COMPONENTS & CARDS -->
     <script type="text/babel" src="js/enhanced-trial-cards.js"></script>
+    <script type="text/babel" src="js/slide-out-panel.js"></script>
+    
+    <!-- 5. FEATURE MODULES -->
     <script type="text/babel" src="js/bank-integration.js"></script>
     <script type="text/babel" src="js/email-scanner.js"></script>
     <script type="text/babel" src="js/receipt-scanner.js"></script>
@@ -73,13 +92,27 @@
     <script type="text/babel" src="js/notifications.js"></script>
     <script type="text/babel" src="js/command-palette.js"></script>
     
-    <!-- View Components -->
-    <script type="text/babel" src="js/masonry-grid.js"></script>
-    <script type="text/babel" src="js/timeline-view.js"></script>
-    <script type="text/babel" src="js/ultimate-dashboard.js"></script>
+    <!-- 6. LAYOUT COMPONENT (Depends on other components) -->
     <script type="text/babel" src="js/new-layout.js"></script>
     
-    <!-- Main App (Load Last) -->
+    <!-- 7. MAIN APP - Load Last (Depends on Everything) -->
     <script type="text/babel" src="js/app.js"></script>
+    
+    <!-- Performance Optimization -->
+    <script>
+        // Preload critical resources
+        if ('loading' in HTMLImageElement.prototype) {
+            const img = document.querySelector('img');
+            if (img) img.loading = 'lazy';
+        }
+        
+        // Console branding
+        console.log(
+            '%c🚀 Aurabilio %cv1.0.0',
+            'font-size: 20px; font-weight: bold; color: #000952;',
+            'font-size: 12px; color: #99fcfa;'
+        );
+        console.log('%cGrow Smarter. Not Harder.', 'color: #6f7d9e; font-style: italic;');
+    </script>
 </body>
 </html>
