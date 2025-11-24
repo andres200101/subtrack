@@ -1,11 +1,27 @@
-// AURABILIO NEW LAYOUT COMPONENT
-// Professional sidebar navigation with fixed stats panel
+// ==============================================
+// AURABILIO COMPLETE 3-COLUMN LAYOUT COMPONENT
+// Sidebar | Main Content | Right Panel
+// ==============================================
 
-window.AurabilioLayout = ({ children, user, totalMonthly, totalYearly, subscriptions, trials, monthlyBudget, onNavigate, currentView, onLogout }) => {
+window.AurabilioLayout = ({ 
+    children, 
+    user, 
+    totalMonthly, 
+    totalYearly, 
+    subscriptions, 
+    trials, 
+    monthlyBudget, 
+    onNavigate, 
+    currentView, 
+    onLogout,
+    isPro 
+}) => {
     const { useState } = React;
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [statsOpen, setStatsOpen] = useState(true);
+    
+    const [sidebarState, setSidebarState] = useState('full'); // 'full', 'collapsed', 'hidden'
+    const [rightPanelOpen, setRightPanelOpen] = useState(true);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
     // Calculate stats
     const activeCount = subscriptions.length;
@@ -20,49 +36,152 @@ window.AurabilioLayout = ({ children, user, totalMonthly, totalYearly, subscript
         remaining: monthlyBudget - totalMonthly
     } : null;
 
-    // Navigation items
+    // Navigation sections
     const navSections = [
         {
-            title: 'Overview',
+            title: 'Core',
             items: [
                 { id: 'dashboard', icon: '📊', label: 'Dashboard', badge: null },
                 { id: 'subscriptions', icon: '💳', label: 'Subscriptions', badge: activeCount },
-                { id: 'trials', icon: '🎁', label: 'Free Trials', badge: urgentTrials > 0 ? urgentTrials : null },
+                { id: 'trials', icon: '🎁', label: 'Trials', badge: urgentTrials > 0 ? urgentTrials : null },
                 { id: 'timeline', icon: '📅', label: 'Timeline', badge: null }
             ]
         },
         {
-            title: 'Manage',
+            title: 'Finance',
             items: [
                 { id: 'budget', icon: '💰', label: 'Budget', badge: null },
-                { id: 'sharing', icon: '👥', label: 'Sharing', badge: null },
-                { id: 'autopilot', icon: '🤖', label: 'Autopilot', badge: null },
                 { id: 'analytics', icon: '📈', label: 'Analytics', badge: null }
             ]
         },
         {
             title: 'Tools',
             items: [
-                { id: 'scan-email', icon: '📧', label: 'Scan Emails', badge: null },
-                { id: 'scan-receipt', icon: '📸', label: 'Scan Receipt', badge: null },
-                { id: 'bank', icon: '🏦', label: 'Connect Bank', badge: null },
-                { id: 'negotiate', icon: '✨', label: 'AI Negotiate', badge: null }
+                { id: 'autopilot', icon: '🤖', label: 'Autopilot', badge: isPro ? '✨' : null },
+                { id: 'sharing', icon: '👥', label: 'Sharing', badge: null }
+            ]
+        },
+        {
+            title: 'System',
+            items: [
+                { id: 'settings', icon: '⚙️', label: 'Settings', badge: null }
             ]
         }
     ];
 
+    // Command Palette shortcut
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setCommandPaletteOpen(true);
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    // Toggle sidebar states
+    const toggleSidebar = () => {
+        const states = ['full', 'collapsed', 'hidden'];
+        const currentIndex = states.indexOf(sidebarState);
+        const nextIndex = (currentIndex + 1) % states.length;
+        setSidebarState(states[nextIndex]);
+    };
+
     return (
-        <div className="app-container">
-            {/* SIDEBAR */}
-            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                {/* Logo */}
-                <div className="sidebar-logo">
-                    <img src="/images/aurabilio.svg" alt="Aurabilio" />
-                    <div className="sidebar-logo-text">Aurabilio</div>
+        <div className={`app-container sidebar-${sidebarState} ${!rightPanelOpen ? 'rightpanel-hidden' : ''}`}>
+            {/* TOP BAR - Spans all 3 columns */}
+            <header className="topbar">
+                <div className="topbar-left">
+                    <button 
+                        className="topbar-button"
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        style={{ display: 'none' }}
+                    >
+                        ☰
+                    </button>
+                    
+                    <a href="#" className="topbar-logo" onClick={(e) => { e.preventDefault(); onNavigate('dashboard'); }}>
+                        <div className="topbar-logo-icon">🌀</div>
+                        <div className="topbar-logo-text">
+                            <span className="topbar-logo-title">Aurabilio</span>
+                            <span className="topbar-logo-subtitle">Subscription Manager</span>
+                        </div>
+                    </a>
                 </div>
 
-                {/* Navigation */}
-                <div className="sidebar-nav">
+                <div className="topbar-center">
+                    {/* Command Palette Trigger */}
+                    <button 
+                        className="topbar-button"
+                        onClick={() => setCommandPaletteOpen(true)}
+                        title="Command Palette (⌘K)"
+                    >
+                        💬
+                    </button>
+
+                    {/* Search */}
+                    <div className="topbar-search">
+                        <span className="topbar-search-icon">🔍</span>
+                        <input 
+                            type="text" 
+                            placeholder="Search subscriptions..."
+                            onFocus={() => setCommandPaletteOpen(true)}
+                        />
+                    </div>
+
+                    {/* Stats Rail */}
+                    <div className="topbar-stats-rail">
+                        <div className="topbar-stat">
+                            <span className="topbar-stat-icon">💰</span>
+                            <span>
+                                <span className="topbar-stat-value">${totalMonthly.toFixed(0)}</span>
+                                <span className="topbar-stat-change"> ▲4.2%</span>
+                            </span>
+                        </div>
+                        <div className="topbar-stat">
+                            <span className="topbar-stat-icon">💳</span>
+                            <span className="topbar-stat-value">{activeCount}</span>
+                        </div>
+                        <div className="topbar-stat">
+                            <span className="topbar-stat-icon">🎁</span>
+                            <span className="topbar-stat-value">{trialsCount}</span>
+                        </div>
+                        {budgetStatus && (
+                            <div className="topbar-stat">
+                                <span className="topbar-stat-icon">📊</span>
+                                <span className="topbar-stat-value">{budgetStatus.percentage.toFixed(0)}%</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="topbar-right">
+                    <div className="topbar-actions">
+                        <button className="topbar-button" title="Notifications">
+                            🔔
+                            {urgentTrials > 0 && (
+                                <span className="topbar-button-badge">{urgentTrials}</span>
+                            )}
+                        </button>
+                        
+                        <button className="topbar-button" title="User Account">
+                            👤
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* SIDEBAR - Left Column */}
+            <aside className={`sidebar ${sidebarState} ${mobileMenuOpen ? 'show' : ''}`}>
+                <div className="sidebar-logo">
+                    <img src="/images/aurabilio.svg" alt="Aurabilio" />
+                    <span className="sidebar-logo-text">Aurabilio</span>
+                </div>
+
+                <nav className="sidebar-nav">
                     {navSections.map((section, idx) => (
                         <div key={idx} className="nav-section">
                             <div className="nav-section-title">{section.title}</div>
@@ -70,7 +189,10 @@ window.AurabilioLayout = ({ children, user, totalMonthly, totalYearly, subscript
                                 <div
                                     key={item.id}
                                     className={`nav-item ${currentView === item.id ? 'active' : ''}`}
-                                    onClick={() => onNavigate(item.id)}
+                                    onClick={() => {
+                                        onNavigate(item.id);
+                                        setMobileMenuOpen(false);
+                                    }}
                                 >
                                     <span className="nav-item-icon">{item.icon}</span>
                                     <span className="nav-item-label">{item.label}</span>
@@ -81,242 +203,212 @@ window.AurabilioLayout = ({ children, user, totalMonthly, totalYearly, subscript
                             ))}
                         </div>
                     ))}
+                </nav>
+
+                <div className="sidebar-toggle" onClick={toggleSidebar}>
+                    {sidebarState === 'full' && '< ▸'}
+                    {sidebarState === 'collapsed' && '▸ >'}
+                    {sidebarState === 'hidden' && '▸▸'}
                 </div>
+            </aside>
 
-                {/* User Profile */}
-                <div style={{
-                    padding: 'var(--space-xl)',
-                    borderTop: '1px solid rgba(153, 252, 250, 0.1)'
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--space-md)',
-                        marginBottom: 'var(--space-md)'
-                    }}>
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--anakiwa) 0%, var(--astronaut) 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: 'var(--text-lg)'
-                        }}>
-                            {user?.email?.[0].toUpperCase() || 'U'}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                                color: 'white',
-                                fontWeight: '600',
-                                fontSize: 'var(--text-sm)',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                            }}>
-                                {user?.email?.split('@')[0] || 'User'}
-                            </div>
-                            <div style={{
-                                color: 'var(--pigeon-post)',
-                                fontSize: 'var(--text-xs)'
-                            }}>
-                                {user?.email || 'user@example.com'}
-                            </div>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onLogout}
-                        style={{
-                            width: '100%',
-                            padding: 'var(--space-sm) var(--space-md)',
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: 'var(--radius-lg)',
-                            color: '#ff6b6b',
-                            fontWeight: '600',
-                            fontSize: 'var(--text-sm)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 'var(--space-sm)'
-                        }}
-                    >
-                        <span>🚪</span>
-                        Logout
-                    </button>
-                </div>
-            </div>
-
-            {/* MAIN CONTENT */}
-            <div className="main-content">
-                {/* TOP BAR */}
-                <div className="topbar">
-                    <div className="topbar-search">
-                        <span className="topbar-search-icon">🔍</span>
-                        <input
-                            type="text"
-                            placeholder="Search subscriptions... (Press '/' to focus)"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="topbar-actions">
-                        <button className="topbar-button" title="Command Palette (⌘K)">
-                            ⚡
-                        </button>
-                        <button className="topbar-button" title="Notifications">
-                            🔔
-                            {urgentTrials > 0 && (
-                                <span className="topbar-button-badge">{urgentTrials}</span>
-                            )}
-                        </button>
-                        <button className="topbar-button" title="Settings">
-                            ⚙️
-                        </button>
-                    </div>
-                </div>
-
-                {/* CONTENT */}
+            {/* MAIN CONTENT - Center Column */}
+            <main className="main-content">
                 <div className="content-wrapper">
                     {children}
                 </div>
-            </div>
+            </main>
 
-            {/* QUICK STATS PANEL */}
-            <div className="quick-stats">
-                <h3 style={{
-                    fontSize: 'var(--text-lg)',
-                    fontWeight: '700',
-                    marginBottom: 'var(--space-xl)',
-                    color: 'var(--text-primary)'
-                }}>
-                    Quick Stats
-                </h3>
+            {/* RIGHT PANEL - Right Column */}
+            <aside className={`quick-stats ${!rightPanelOpen ? 'hidden' : ''}`}>
+                <div className="quick-stats-header">
+                    <h3 className="quick-stats-title">Quick Stats</h3>
+                    <button 
+                        className="quick-stats-collapse"
+                        onClick={() => setRightPanelOpen(!rightPanelOpen)}
+                    >
+                        ›
+                    </button>
+                </div>
 
                 {/* Monthly Spending */}
                 <div className="stat-card">
                     <div className="stat-label">Monthly Spending</div>
                     <div className="stat-value">${totalMonthly.toFixed(2)}</div>
-                    <div style={{
-                        fontSize: 'var(--text-sm)',
-                        color: 'var(--text-secondary)',
-                        marginTop: 'var(--space-xs)'
-                    }}>
-                        ${totalYearly.toFixed(2)}/year
-                    </div>
+                    <div className="stat-change">↑ $234 from last month</div>
                 </div>
 
-                {/* Budget Progress */}
+                {/* Active Subscriptions */}
+                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)' }}>
+                    <div className="stat-label">Active Subscriptions</div>
+                    <div className="stat-value">{activeCount}</div>
+                    {!isPro && activeCount >= 5 && (
+                        <div className="stat-change" style={{ color: '#fbbf24' }}>⚠️ Free limit reached</div>
+                    )}
+                </div>
+
+                {/* Budget Status */}
                 {budgetStatus && (
-                    <div className="stat-card">
+                    <div className="stat-card" style={{ 
+                        background: budgetStatus.percentage > 100 
+                            ? 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
+                            : 'linear-gradient(135deg, #10b981 0%, #34d399 100%)'
+                    }}>
                         <div className="stat-label">Budget Status</div>
-                        <div style={{
-                            marginTop: 'var(--space-md)',
-                            marginBottom: 'var(--space-sm)'
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                marginBottom: 'var(--space-xs)',
-                                fontSize: 'var(--text-sm)',
-                                fontWeight: '600'
-                            }}>
-                                <span>{budgetStatus.percentage.toFixed(0)}% used</span>
-                                <span style={{
-                                    color: budgetStatus.remaining >= 0 ? 'var(--success)' : 'var(--danger)'
-                                }}>
-                                    ${Math.abs(budgetStatus.remaining).toFixed(2)} {budgetStatus.remaining >= 0 ? 'left' : 'over'}
-                                </span>
-                            </div>
-                            <div style={{
-                                height: '8px',
-                                background: 'var(--surface-hover)',
-                                borderRadius: 'var(--radius-full)',
-                                overflow: 'hidden'
-                            }}>
-                                <div style={{
-                                    height: '100%',
-                                    width: `${Math.min(budgetStatus.percentage, 100)}%`,
-                                    background: budgetStatus.percentage > 100
-                                        ? 'linear-gradient(90deg, var(--danger) 0%, #ff6b6b 100%)'
-                                        : budgetStatus.percentage > 90
-                                        ? 'linear-gradient(90deg, var(--warning) 0%, #fbbf24 100%)'
-                                        : 'linear-gradient(90deg, var(--success) 0%, #34d399 100%)',
-                                    transition: 'all 0.5s ease'
-                                }}></div>
-                            </div>
+                        <div className="stat-value">{budgetStatus.percentage.toFixed(0)}%</div>
+                        <div className="stat-change">
+                            {budgetStatus.remaining >= 0 
+                                ? `$${budgetStatus.remaining.toFixed(0)} remaining`
+                                : `$${Math.abs(budgetStatus.remaining).toFixed(0)} over`
+                            }
                         </div>
                     </div>
                 )}
 
-                {/* Active Subscriptions */}
-                <div className="stat-card">
-                    <div className="stat-label">Active Subs</div>
-                    <div className="stat-value">{activeCount}</div>
-                </div>
-
-                {/* Trials Ending Soon */}
+                {/* Urgent Trials */}
                 {urgentTrials > 0 && (
-                    <div className="stat-card" style={{
-                        background: 'linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%)',
-                        border: '2px solid var(--danger)',
-                        animation: 'pulse 2s infinite'
-                    }}>
-                        <div className="stat-label" style={{ color: 'var(--danger)' }}>
-                            ⚠️ Urgent Trials
-                        </div>
-                        <div className="stat-value" style={{
-                            background: 'linear-gradient(135deg, var(--danger) 0%, var(--warning) 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                        }}>
-                            {urgentTrials}
-                        </div>
-                        <div style={{
-                            fontSize: 'var(--text-sm)',
-                            color: 'var(--danger)',
-                            marginTop: 'var(--space-xs)',
-                            fontWeight: '600'
-                        }}>
-                            Ending in 3 days or less!
-                        </div>
+                    <div className="stat-card" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)' }}>
+                        <div className="stat-label">⚠️ Urgent Trials</div>
+                        <div className="stat-value">{urgentTrials}</div>
+                        <div className="stat-change">Ending in 3 days or less!</div>
                     </div>
                 )}
 
                 {/* Quick Actions */}
-                <div style={{ marginTop: 'var(--space-2xl)' }}>
+                <div style={{ marginTop: 'var(--space-8)' }}>
                     <h4 style={{
                         fontSize: 'var(--text-sm)',
-                        fontWeight: '600',
+                        fontWeight: 'var(--font-semibold)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.1em',
                         color: 'var(--text-secondary)',
-                        marginBottom: 'var(--space-lg)'
+                        marginBottom: 'var(--space-4)'
                     }}>
                         Quick Actions
                     </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                         <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                            <span>➕</span>
-                            Add Subscription
+                            <span>➕</span> Add New
                         </button>
                         <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
-                            <span>📧</span>
-                            Scan Emails
+                            <span>📧</span> Scan Emails
                         </button>
                         <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
-                            <span>📊</span>
-                            View Analytics
+                            <span>📊</span> Analytics
                         </button>
                     </div>
                 </div>
-            </div>
+
+                {/* Upcoming Bills */}
+                <div style={{ marginTop: 'var(--space-8)' }}>
+                    <h4 style={{
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 'var(--font-semibold)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: 'var(--text-secondary)',
+                        marginBottom: 'var(--space-4)'
+                    }}>
+                        Next 7 Days
+                    </h4>
+                    <div style={{ 
+                        background: 'var(--glass-bg)',
+                        backdropFilter: 'var(--glass-blur)',
+                        border: '1px solid var(--glass-border)',
+                        borderRadius: 'var(--radius-xl)',
+                        padding: 'var(--space-4)',
+                        fontSize: 'var(--text-sm)'
+                    }}>
+                        {subscriptions.slice(0, 5).map(sub => {
+                            const nextDate = sub.next_billing_date || sub.trial_end_date;
+                            if (!nextDate) return null;
+                            
+                            const daysUntil = Math.ceil((new Date(nextDate) - new Date()) / (1000 * 60 * 60 * 24));
+                            if (daysUntil > 7) return null;
+                            
+                            return (
+                                <div key={sub.id} style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between',
+                                    padding: 'var(--space-2) 0',
+                                    borderBottom: '1px solid var(--gray-200)'
+                                }}>
+                                    <span style={{ fontWeight: 'var(--font-semibold)' }}>{sub.name}</span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>
+                                        {daysUntil === 0 ? 'Today' : `${daysUntil}d`}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </aside>
+
+            {/* BOTTOM NAVIGATION - Mobile only */}
+            <nav className="bottom-nav" style={{ display: 'none' }}>
+                <a href="#" className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); onNavigate('dashboard'); }}>
+                    <span className="bottom-nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" className={`bottom-nav-item ${currentView === 'subscriptions' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); onNavigate('subscriptions'); }}>
+                    <span className="bottom-nav-icon">💳</span>
+                    <span>Subs</span>
+                </a>
+                <a href="#" className={`bottom-nav-item ${currentView === 'trials' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); onNavigate('trials'); }}>
+                    <span className="bottom-nav-icon">🎁</span>
+                    <span>Trials</span>
+                </a>
+                <a href="#" className={`bottom-nav-item ${currentView === 'settings' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); onNavigate('settings'); }}>
+                    <span className="bottom-nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            {/* Command Palette */}
+            {commandPaletteOpen && window.CommandPalette && (
+                <window.CommandPalette
+                    subscriptions={subscriptions}
+                    onCommand={(cmd) => {
+                        console.log('Command:', cmd);
+                        setCommandPaletteOpen(false);
+                    }}
+                    onClose={() => setCommandPaletteOpen(false)}
+                />
+            )}
+
+            {/* Mobile Menu Backdrop */}
+            {mobileMenuOpen && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 'var(--z-modal-backdrop)',
+                        display: 'none'
+                    }}
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
         </div>
     );
 };
+
+// Make responsive adjustments via CSS
+const style = document.createElement('style');
+style.textContent = `
+    @media (max-width: 768px) {
+        .sidebar { display: none; }
+        .bottom-nav { display: flex !important; }
+        .sidebar.show { 
+            display: flex !important; 
+            position: fixed;
+            left: 0;
+            top: 60px;
+            bottom: 64px;
+            width: 260px;
+            z-index: 50;
+        }
+        .topbar-button[title="User Account"] { display: flex !important; }
+    }
+`;
+document.head.appendChild(style);
