@@ -2,7 +2,23 @@
 // AURABILIO MAIN APP - app.js
 // Clean, organized main application logic
 // ==============================================
-
+// In app.js, find where you render the layout:
+return (
+    <window.AurabilioLayout
+        user={user}
+        subscriptions={subscriptions}
+        trials={trials}
+        totalMonthly={totalMonthly}
+        totalYearly={totalYearly}
+        monthlyBudget={monthlyBudget}
+        onNavigate={setCurrentView}
+        currentView={currentView}
+        onLogout={handleLogout}
+        isPro={isPro}  // Make sure this is passed!
+    >
+        {renderContent()}
+    </window.AurabilioLayout>
+);
 const { useState, useEffect } = React;
 
 // Supabase Client Setup
