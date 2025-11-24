@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Menu, X, Bell, User, Search } from 'lucide-react';
+// ==============================================
+// AURABILIO ENHANCED 3-COLUMN LAYOUT
+// Browser-compatible version (no ES6 imports)
+// ==============================================
 
-const AurabilioEnhancedLayout = ({ 
+window.AurabilioLayout = ({ 
+    children, 
     user, 
+    totalMonthly = 0, 
+    totalYearly = 0, 
     subscriptions = [], 
     trials = [], 
-    totalMonthly = 0, 
-    totalYearly = 0,
-    monthlyBudget,
-    onNavigate,
-    currentView,
+    monthlyBudget, 
+    onNavigate, 
+    currentView, 
     onLogout,
-    isPro,
-    children 
+    isPro 
 }) => {
+    const { useState, useEffect } = React;
+    
     // Load saved state from localStorage
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         const saved = localStorage.getItem('aurabilio_sidebar_collapsed');
@@ -46,6 +50,48 @@ const AurabilioEnhancedLayout = ({
         return daysLeft <= 3 && daysLeft >= 0;
     }).length;
 
+    // Simple SVG icons as functions
+    const ChevronLeft = ({ size = 20 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('polyline', { points: '15 18 9 12 15 6' })
+        )
+    );
+
+    const ChevronRight = ({ size = 20 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('polyline', { points: '9 18 15 12 9 6' })
+        )
+    );
+
+    const Menu = ({ size = 24 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('line', { x1: 3, y1: 12, x2: 21, y2: 12 }),
+            React.createElement('line', { x1: 3, y1: 6, x2: 21, y2: 6 }),
+            React.createElement('line', { x1: 3, y1: 18, x2: 21, y2: 18 })
+        )
+    );
+
+    const X = ({ size = 24 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('line', { x1: 18, y1: 6, x2: 6, y2: 18 }),
+            React.createElement('line', { x1: 6, y1: 6, x2: 18, y2: 18 })
+        )
+    );
+
+    const Bell = ({ size = 20 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('path', { d: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' }),
+            React.createElement('path', { d: 'M13.73 21a2 2 0 0 1-3.46 0' })
+        )
+    );
+
+    const User = ({ size = 20 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
+            React.createElement('circle', { cx: 12, cy: 7, r: 4 })
+        )
+    );
+
     // Navigation sections
     const navSections = [
         {
@@ -66,340 +112,292 @@ const AurabilioEnhancedLayout = ({
         }
     ];
 
-    return (
-        <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden">
-            <style>{`
-                .sidebar-transition {
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    return React.createElement('div', { 
+        className: 'h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden' 
+    },
+        // Styles
+        React.createElement('style', null, `
+            .sidebar-transition {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .hover-glow:hover {
+                box-shadow: 0 0 20px rgba(153, 252, 250, 0.3);
+            }
+            @media (max-width: 1024px) {
+                .stats-rail { display: none !important; }
+            }
+            @media (max-width: 768px) {
+                .mobile-menu-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0, 0, 0, 0.5);
+                    z-index: 40;
                 }
+                .mobile-sidebar {
+                    position: fixed;
+                    left: 0;
+                    top: 64px;
+                    bottom: 0;
+                    width: 260px;
+                    z-index: 50;
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+                .mobile-sidebar.open {
+                    transform: translateX(0);
+                }
+            }
+        `),
+
+        // TOP BAR
+        React.createElement('header', { 
+            className: 'h-16 bg-white/90 backdrop-blur-xl border-b border-slate-200 flex items-center justify-between px-6 z-50 shadow-sm' 
+        },
+            // Left
+            React.createElement('div', { className: 'flex items-center gap-4' },
+                React.createElement('button', {
+                    onClick: () => setMobileMenuOpen(!mobileMenuOpen),
+                    className: 'lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors'
+                }, mobileMenuOpen ? React.createElement(X, { size: 24 }) : React.createElement(Menu, { size: 24 })),
                 
-                .hover-glow:hover {
-                    box-shadow: 0 0 20px rgba(153, 252, 250, 0.3);
-                }
+                React.createElement('div', { 
+                    className: 'flex items-center gap-3 cursor-pointer',
+                    onClick: () => onNavigate('dashboard')
+                },
+                    React.createElement('div', { 
+                        className: 'w-10 h-10 bg-gradient-to-br from-indigo-900 to-blue-800 rounded-xl flex items-center justify-center text-xl shadow-lg' 
+                    }, '🌀'),
+                    React.createElement('div', { className: 'hidden sm:block' },
+                        React.createElement('div', { className: 'font-black text-lg text-indigo-950' }, 'Aurabilio'),
+                        React.createElement('div', { className: 'text-xs text-slate-600 font-semibold' }, 'Subscription Manager')
+                    )
+                )
+            ),
 
-                @media (max-width: 1024px) {
-                    .stats-rail { display: none !important; }
-                }
+            // Center - Stats Rail
+            React.createElement('div', { 
+                className: 'stats-rail hidden md:flex items-center gap-4 px-6 py-2 bg-indigo-50/80 rounded-full border border-indigo-100' 
+            },
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                    React.createElement('span', { className: 'text-lg' }, '💰'),
+                    React.createElement('div', { className: 'flex items-baseline gap-1' },
+                        React.createElement('span', { className: 'font-black text-indigo-950' }, `$${totalMonthly.toFixed(0)}`),
+                        React.createElement('span', { className: 'text-xs text-green-600 font-bold' }, `↓${changePercent}%`)
+                    )
+                ),
+                React.createElement('div', { className: 'w-px h-6 bg-indigo-200' }),
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                    React.createElement('span', { className: 'text-lg' }, '💳'),
+                    React.createElement('span', { className: 'font-black text-indigo-950' }, activeCount)
+                ),
+                React.createElement('div', { className: 'w-px h-6 bg-indigo-200' }),
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                    React.createElement('span', { className: 'text-lg' }, '🎁'),
+                    React.createElement('span', { className: 'font-black text-indigo-950' }, trialsCount)
+                )
+            ),
 
-                @media (max-width: 768px) {
-                    .mobile-menu-overlay {
-                        position: fixed;
-                        inset: 0;
-                        background: rgba(0, 0, 0, 0.5);
-                        z-index: 40;
-                    }
-                    .mobile-sidebar {
-                        position: fixed;
-                        left: 0;
-                        top: 64px;
-                        bottom: 0;
-                        width: 260px;
-                        z-index: 50;
-                        transform: translateX(-100%);
-                        transition: transform 0.3s ease;
-                    }
-                    .mobile-sidebar.open {
-                        transform: translateX(0);
-                    }
-                }
-            `}</style>
+            // Right
+            React.createElement('div', { className: 'flex items-center gap-2' },
+                React.createElement('button', { 
+                    className: 'relative p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600' 
+                },
+                    React.createElement(Bell, { size: 20 }),
+                    urgentTrials > 0 && React.createElement('span', { 
+                        className: 'absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center' 
+                    }, urgentTrials)
+                ),
+                React.createElement('button', {
+                    onClick: onLogout,
+                    className: 'p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600'
+                }, React.createElement(User, { size: 20 }))
+            )
+        ),
 
-            {/* TOP BAR */}
-            <header className="h-16 bg-white/90 backdrop-blur-xl border-b border-slate-200 flex items-center justify-between px-6 z-50 shadow-sm">
-                {/* Left: Logo + Mobile Menu */}
-                <div className="flex items-center gap-4">
-                    <button 
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    >
-                        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
-                    
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('dashboard')}>
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-900 to-blue-800 rounded-xl flex items-center justify-center text-xl shadow-lg">
-                            🌀
-                        </div>
-                        <div className="hidden sm:block">
-                            <div className="font-black text-lg text-indigo-950">Aurabilio</div>
-                            <div className="text-xs text-slate-600 font-semibold">Subscription Manager</div>
-                        </div>
-                    </div>
-                </div>
+        // MAIN LAYOUT
+        React.createElement('div', { className: 'flex-1 flex overflow-hidden' },
+            // LEFT SIDEBAR
+            React.createElement('aside', {
+                className: `sidebar-transition bg-gradient-to-b from-indigo-950 to-blue-900 flex-col border-r border-indigo-800/30 hidden lg:flex ${sidebarCollapsed ? 'w-20' : 'w-64'}`
+            },
+                // Nav
+                React.createElement('nav', { className: 'flex-1 overflow-y-auto py-6 px-3 space-y-6' },
+                    navSections.map((section, idx) =>
+                        React.createElement('div', { key: idx },
+                            !sidebarCollapsed && React.createElement('div', { 
+                                className: 'px-3 mb-2 text-xs font-bold text-indigo-300/60 tracking-wider' 
+                            }, section.title),
+                            React.createElement('div', { className: 'space-y-1' },
+                                section.items.map(item =>
+                                    React.createElement('button', {
+                                        key: item.id,
+                                        onClick: () => onNavigate(item.id),
+                                        className: `w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all relative group ${
+                                            currentView === item.id ? 'bg-cyan-400/20 text-white' : 'text-indigo-200 hover:bg-white/10 hover:text-white'
+                                        }`,
+                                        title: sidebarCollapsed ? item.label : ''
+                                    },
+                                        currentView === item.id && React.createElement('div', { 
+                                            className: 'absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-400 rounded-r-full' 
+                                        }),
+                                        React.createElement('span', { className: 'text-xl flex-shrink-0' }, item.icon),
+                                        !sidebarCollapsed && React.createElement(React.Fragment, null,
+                                            React.createElement('span', { className: 'font-semibold text-sm flex-1 text-left' }, item.label),
+                                            item.badge > 0 && React.createElement('span', { 
+                                                className: 'px-2 py-0.5 bg-cyan-400 text-indigo-950 rounded-full text-xs font-bold' 
+                                            }, item.badge)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
 
-                {/* Center: Consolidated Stats Rail */}
-                <div className="stats-rail hidden md:flex items-center gap-4 px-6 py-2 bg-indigo-50/80 rounded-full border border-indigo-100">
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg">💰</span>
-                        <div className="flex items-baseline gap-1">
-                            <span className="font-black text-indigo-950">${totalMonthly.toFixed(0)}</span>
-                            <span className="text-xs text-green-600 font-bold">↓{changePercent}%</span>
-                        </div>
-                    </div>
-                    
-                    <div className="w-px h-6 bg-indigo-200"></div>
-                    
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg">💳</span>
-                        <span className="font-black text-indigo-950">{activeCount}</span>
-                    </div>
-                    
-                    <div className="w-px h-6 bg-indigo-200"></div>
-                    
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg">🎁</span>
-                        <span className="font-black text-indigo-950">{trialsCount}</span>
-                    </div>
-                </div>
+                // Toggle button
+                React.createElement('div', { className: 'p-4 border-t border-indigo-800/30' },
+                    React.createElement('button', {
+                        onClick: () => setSidebarCollapsed(!sidebarCollapsed),
+                        className: 'w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white font-semibold',
+                        title: sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+                    },
+                        sidebarCollapsed ? React.createElement(ChevronRight, { size: 20 }) : React.createElement(React.Fragment, null,
+                            React.createElement(ChevronLeft, { size: 20 }),
+                            React.createElement('span', { className: 'text-sm' }, 'Collapse')
+                        )
+                    )
+                )
+            ),
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-2">
-                    <button className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600">
-                        <Bell size={20} />
-                        {urgentTrials > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                                {urgentTrials}
-                            </span>
-                        )}
-                    </button>
-                    <button 
-                        onClick={onLogout}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600"
-                    >
-                        <User size={20} />
-                    </button>
-                </div>
-            </header>
+            // MAIN CONTENT
+            React.createElement('main', { className: 'flex-1 overflow-y-auto' },
+                React.createElement('div', { className: 'max-w-7xl mx-auto p-6 lg:p-8' },
+                    children
+                )
+            ),
 
-            {/* MAIN LAYOUT */}
-            <div className="flex-1 flex overflow-hidden">
-                {/* LEFT SIDEBAR */}
-                <aside 
-                    className={`sidebar-transition bg-gradient-to-b from-indigo-950 to-blue-900 flex-col border-r border-indigo-800/30 hidden lg:flex ${
-                        sidebarCollapsed ? 'w-20' : 'w-64'
-                    }`}
-                >
-                    {/* Nav Items */}
-                    <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
-                        {navSections.map((section, idx) => (
-                            <div key={idx}>
-                                {!sidebarCollapsed && (
-                                    <div className="px-3 mb-2 text-xs font-bold text-indigo-300/60 tracking-wider">
-                                        {section.title}
-                                    </div>
-                                )}
-                                <div className="space-y-1">
-                                    {section.items.map(item => (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => onNavigate(item.id)}
-                                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all relative group ${
-                                                currentView === item.id
-                                                    ? 'bg-cyan-400/20 text-white'
-                                                    : 'text-indigo-200 hover:bg-white/10 hover:text-white'
-                                            }`}
-                                            title={sidebarCollapsed ? item.label : ''}
-                                        >
-                                            {currentView === item.id && (
-                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-400 rounded-r-full"></div>
-                                            )}
-                                            <span className="text-xl flex-shrink-0">{item.icon}</span>
-                                            {!sidebarCollapsed && (
-                                                <>
-                                                    <span className="font-semibold text-sm flex-1 text-left">{item.label}</span>
-                                                    {item.badge > 0 && (
-                                                        <span className="px-2 py-0.5 bg-cyan-400 text-indigo-950 rounded-full text-xs font-bold">
-                                                            {item.badge}
-                                                        </span>
-                                                    )}
-                                                </>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </nav>
+            // RIGHT PANEL
+            React.createElement('aside', {
+                className: `sidebar-transition bg-white border-l border-slate-200 flex-col hidden xl:flex ${rightPanelCollapsed ? 'w-0 opacity-0' : 'w-80'}`
+            },
+                !rightPanelCollapsed && React.createElement(React.Fragment, null,
+                    // Header
+                    React.createElement('div', { className: 'p-6 border-b border-slate-200 flex items-center justify-between' },
+                        React.createElement('h3', { className: 'font-bold text-indigo-950' }, 'Quick Stats'),
+                        React.createElement('button', {
+                            onClick: () => setRightPanelCollapsed(true),
+                            className: 'p-1.5 hover:bg-slate-100 rounded-lg transition-colors',
+                            title: 'Collapse panel'
+                        }, React.createElement(ChevronRight, { size: 18 }))
+                    ),
 
-                    {/* Collapse Toggle */}
-                    <div className="p-4 border-t border-indigo-800/30">
-                        <button
-                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white font-semibold"
-                            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                        >
-                            {sidebarCollapsed ? (
-                                <ChevronRight size={20} />
-                            ) : (
-                                <>
-                                    <ChevronLeft size={20} />
-                                    <span className="text-sm">Collapse</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </aside>
+                    // Stats
+                    React.createElement('div', { className: 'flex-1 overflow-y-auto p-6 space-y-4' },
+                        // Monthly Total
+                        React.createElement('div', { 
+                            className: 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 hover:shadow-md transition-shadow' 
+                        },
+                            React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5' }, '💰'),
+                            React.createElement('div', { className: 'relative' },
+                                React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2' }, 'Monthly Total'),
+                                React.createElement('p', { className: 'text-4xl font-black bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-2' }, 
+                                    `$${totalMonthly.toFixed(2)}`
+                                ),
+                                React.createElement('div', { className: 'flex items-center gap-2 text-sm mb-2' },
+                                    React.createElement('span', { className: 'text-green-600 font-bold' }, `↓ $${monthlyChange}`),
+                                    React.createElement('span', { className: 'text-slate-500' }, 'from last month')
+                                ),
+                                React.createElement('div', { className: 'text-sm text-indigo-600' }, `$${totalYearly.toFixed(2)}/year`)
+                            )
+                        ),
 
-                {/* MAIN CONTENT */}
-                <main className="flex-1 overflow-y-auto">
-                    <div className="max-w-7xl mx-auto p-6 lg:p-8">
-                        {children}
-                    </div>
-                </main>
+                        // Active Subs
+                        React.createElement('div', { 
+                            className: 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 hover:shadow-md transition-shadow' 
+                        },
+                            React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5' }, '💳'),
+                            React.createElement('div', { className: 'relative' },
+                                React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-blue-600 mb-2' }, 'Active Subscriptions'),
+                                React.createElement('p', { className: 'text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent' }, activeCount)
+                            )
+                        ),
 
-                {/* RIGHT PANEL */}
-                <aside 
-                    className={`sidebar-transition bg-white border-l border-slate-200 flex-col hidden xl:flex ${
-                        rightPanelCollapsed ? 'w-0 opacity-0' : 'w-80'
-                    }`}
-                >
-                    {!rightPanelCollapsed && (
-                        <>
-                            {/* Header */}
-                            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                                <h3 className="font-bold text-indigo-950">Quick Stats</h3>
-                                <button
-                                    onClick={() => setRightPanelCollapsed(true)}
-                                    className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-                                    title="Collapse panel"
-                                >
-                                    <ChevronRight size={18} />
-                                </button>
-                            </div>
+                        // Quick Actions
+                        React.createElement('div', { className: 'space-y-2 pt-4' },
+                            React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-slate-600 mb-3' }, 'Quick Actions'),
+                            React.createElement('button', { 
+                                className: 'w-full p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2 group' 
+                            },
+                                React.createElement('span', { className: 'text-xl' }, '📧'),
+                                React.createElement('span', null, 'Scan Emails'),
+                                React.createElement('span', { className: 'text-xs opacity-80 group-hover:opacity-100' }, 'Auto-detect')
+                            ),
+                            React.createElement('button', { 
+                                className: 'w-full p-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2' 
+                            }, '➕ Add New'),
+                            React.createElement('button', { 
+                                className: 'w-full p-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2' 
+                            }, '📊 Analytics')
+                        ),
 
-                            {/* Stats */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                {/* Monthly Total - 20% Lighter */}
-                                <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 hover:shadow-md transition-shadow">
-                                    <div className="absolute top-0 right-0 text-6xl opacity-5">💰</div>
-                                    <div className="relative">
-                                        <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2">
-                                            Monthly Total
-                                        </p>
-                                        <p className="text-4xl font-black bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-2">
-                                            ${totalMonthly.toFixed(2)}
-                                        </p>
-                                        <div className="flex items-center gap-2 text-sm mb-2">
-                                            <span className="text-green-600 font-bold">↓ ${monthlyChange}</span>
-                                            <span className="text-slate-500">from last month</span>
-                                        </div>
-                                        <div className="text-sm text-indigo-600">
-                                            ${totalYearly.toFixed(2)}/year
-                                        </div>
-                                    </div>
-                                </div>
+                        // Next 7 Days
+                        React.createElement('div', { className: 'p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100' },
+                            React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-green-700 mb-3' }, 'Next 7 Days'),
+                            React.createElement('div', { className: 'text-center py-4' },
+                                React.createElement('p', { className: 'text-3xl mb-2' }, '🎉'),
+                                React.createElement('p', { className: 'font-bold text-green-800 mb-1' }, 'No upcoming charges'),
+                                React.createElement('p', { className: 'text-sm text-green-600' }, "You're all set!")
+                            )
+                        )
+                    )
+                )
+            ),
 
-                                {/* Active Subscriptions */}
-                                <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 hover:shadow-md transition-shadow">
-                                    <div className="absolute top-0 right-0 text-6xl opacity-5">💳</div>
-                                    <div className="relative">
-                                        <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-2">
-                                            Active Subscriptions
-                                        </p>
-                                        <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                                            {activeCount}
-                                        </p>
-                                    </div>
-                                </div>
+            // Right Panel Expand Button
+            rightPanelCollapsed && React.createElement('button', {
+                onClick: () => setRightPanelCollapsed(false),
+                className: 'hidden xl:flex items-center justify-center w-8 bg-white border-l border-slate-200 hover:bg-slate-50 transition-colors',
+                title: 'Expand panel'
+            }, React.createElement(ChevronLeft, { size: 18, className: 'text-slate-600' }))
+        ),
 
-                                {/* Quick Actions - Scan Emails Prominent */}
-                                <div className="space-y-2 pt-4">
-                                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">
-                                        Quick Actions
-                                    </p>
-                                    
-                                    {/* Scan Emails - PROMOTED */}
-                                    <button className="w-full p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2 group">
-                                        <span className="text-xl">📧</span>
-                                        <span>Scan Emails</span>
-                                        <span className="text-xs opacity-80 group-hover:opacity-100">Auto-detect</span>
-                                    </button>
-                                    
-                                    <button className="w-full p-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                                        ➕ Add New
-                                    </button>
-                                    
-                                    <button className="w-full p-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                                        📊 Analytics
-                                    </button>
-                                </div>
-
-                                {/* Next 7 Days - Enhanced Empty State */}
-                                <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
-                                    <p className="text-xs font-bold uppercase tracking-wider text-green-700 mb-3">
-                                        Next 7 Days
-                                    </p>
-                                    <div className="text-center py-4">
-                                        <p className="text-3xl mb-2">🎉</p>
-                                        <p className="font-bold text-green-800 mb-1">
-                                            No upcoming charges
-                                        </p>
-                                        <p className="text-sm text-green-600">
-                                            You're all set!
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </aside>
-
-                {/* Right Panel Expand Button */}
-                {rightPanelCollapsed && (
-                    <button
-                        onClick={() => setRightPanelCollapsed(false)}
-                        className="hidden xl:flex items-center justify-center w-8 bg-white border-l border-slate-200 hover:bg-slate-50 transition-colors"
-                        title="Expand panel"
-                    >
-                        <ChevronLeft size={18} className="text-slate-600" />
-                    </button>
-                )}
-            </div>
-
-            {/* Mobile Menu */}
-            {mobileMenuOpen && (
-                <>
-                    <div className="mobile-menu-overlay lg:hidden" onClick={() => setMobileMenuOpen(false)} />
-                    <div className={`mobile-sidebar lg:hidden bg-gradient-to-b from-indigo-950 to-blue-900 ${mobileMenuOpen ? 'open' : ''}`}>
-                        <nav className="p-6 space-y-6">
-                            {navSections.map((section, idx) => (
-                                <div key={idx}>
-                                    <div className="px-3 mb-2 text-xs font-bold text-indigo-300/60 tracking-wider">
-                                        {section.title}
-                                    </div>
-                                    <div className="space-y-1">
-                                        {section.items.map(item => (
-                                            <button
-                                                key={item.id}
-                                                onClick={() => {
-                                                    onNavigate(item.id);
-                                                    setMobileMenuOpen(false);
-                                                }}
-                                                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
-                                                    currentView === item.id
-                                                        ? 'bg-cyan-400/20 text-white'
-                                                        : 'text-indigo-200 hover:bg-white/10'
-                                                }`}
-                                            >
-                                                <span className="text-xl">{item.icon}</span>
-                                                <span className="font-semibold text-sm">{item.label}</span>
-                                                {item.badge > 0 && (
-                                                    <span className="px-2 py-0.5 bg-cyan-400 text-indigo-950 rounded-full text-xs font-bold ml-auto">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </nav>
-                    </div>
-                </>
-            )}
-        </div>
+        // Mobile Menu
+        mobileMenuOpen && React.createElement(React.Fragment, null,
+            React.createElement('div', { 
+                className: 'mobile-menu-overlay lg:hidden',
+                onClick: () => setMobileMenuOpen(false)
+            }),
+            React.createElement('div', { 
+                className: `mobile-sidebar lg:hidden bg-gradient-to-b from-indigo-950 to-blue-900 ${mobileMenuOpen ? 'open' : ''}` 
+            },
+                React.createElement('nav', { className: 'p-6 space-y-6' },
+                    navSections.map((section, idx) =>
+                        React.createElement('div', { key: idx },
+                            React.createElement('div', { className: 'px-3 mb-2 text-xs font-bold text-indigo-300/60 tracking-wider' }, section.title),
+                            React.createElement('div', { className: 'space-y-1' },
+                                section.items.map(item =>
+                                    React.createElement('button', {
+                                        key: item.id,
+                                        onClick: () => {
+                                            onNavigate(item.id);
+                                            setMobileMenuOpen(false);
+                                        },
+                                        className: `w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
+                                            currentView === item.id ? 'bg-cyan-400/20 text-white' : 'text-indigo-200 hover:bg-white/10'
+                                        }`
+                                    },
+                                        React.createElement('span', { className: 'text-xl' }, item.icon),
+                                        React.createElement('span', { className: 'font-semibold text-sm' }, item.label),
+                                        item.badge > 0 && React.createElement('span', { 
+                                            className: 'px-2 py-0.5 bg-cyan-400 text-indigo-950 rounded-full text-xs font-bold ml-auto' 
+                                        }, item.badge)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
     );
 };
-
-window.AurabilioLayout = AurabilioEnhancedLayout;
-
-export default AurabilioEnhancedLayout;
