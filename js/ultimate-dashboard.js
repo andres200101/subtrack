@@ -1,86 +1,57 @@
-// ==============================================
-// ULTIMATE DASHBOARD V2 - PREMIUM FINTECH DESIGN
-// Implements all feedback from design document
-// ==============================================
+import React, { useState, useEffect, useRef } from 'react';
 
-window.UltimateDashboard = ({ 
+const EnhancedUltimateDashboard = ({ 
     user, 
-    subscriptions, 
-    trials, 
-    totalMonthly, 
-    totalYearly, 
+    subscriptions = [], 
+    trials = [], 
+    totalMonthly = 0, 
+    totalYearly = 0,
     monthlyBudget,
-    cancelledSubscriptions,
+    cancelledSubscriptions = [],
     onNavigate,
     onAddNew,
     onScanEmail,
     onScanReceipt,
     onConnectBank,
-    onEnableAutopilot,
-    onViewAnalytics,
-    onSetBudget,
-    onViewSharing,
-    onUpgrade,
     isPro,
-    calculateMonthlyEquivalent,
-    getDaysRemaining,
-    formatDate
+    calculateMonthlyEquivalent = (cost, cycle) => parseFloat(cost),
+    getDaysRemaining = (date) => Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24)),
+    formatDate = (date) => new Date(date).toLocaleDateString()
 }) => {
-    const { useState, useEffect, useRef } = React;
-
-    // Animated counter for numbers
     const [displayedMonthly, setDisplayedMonthly] = useState(0);
-    const [displayedYearly, setDisplayedYearly] = useState(0);
+    const chartRef = useRef(null);
 
+    // Animated count-up
     useEffect(() => {
-        // Count-up animation
         const duration = 1000;
         const steps = 60;
-        const monthlyIncrement = totalMonthly / steps;
-        const yearlyIncrement = totalYearly / steps;
+        const increment = totalMonthly / steps;
         let currentStep = 0;
 
         const interval = setInterval(() => {
             currentStep++;
-            setDisplayedMonthly(Math.min(monthlyIncrement * currentStep, totalMonthly));
-            setDisplayedYearly(Math.min(yearlyIncrement * currentStep, totalYearly));
-
-            if (currentStep >= steps) {
-                clearInterval(interval);
-            }
+            setDisplayedMonthly(Math.min(increment * currentStep, totalMonthly));
+            if (currentStep >= steps) clearInterval(interval);
         }, duration / steps);
 
         return () => clearInterval(interval);
-    }, [totalMonthly, totalYearly]);
+    }, [totalMonthly]);
 
-    // Extract first name from email
+    // Extract first name
     const firstName = user?.email?.split('@')[0]?.split('.')[0] || 'there';
     const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
     // Calculate stats
     const urgentTrials = trials.filter(t => getDaysRemaining(t.trial_end_date) <= 3);
     const activeCount = subscriptions.length;
-    const savingsYearly = cancelledSubscriptions?.reduce((sum, sub) => 
-        sum + (calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle) * 12), 0
-    ) || 0;
 
-    const budgetStatus = monthlyBudget ? {
-        percentage: (totalMonthly / monthlyBudget) * 100,
-        remaining: monthlyBudget - totalMonthly,
-        isOver: totalMonthly > monthlyBudget
-    } : null;
+    // Category breakdown
+    const categoryData = {};
+    subscriptions.forEach(sub => {
+        const monthly = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+        categoryData[sub.category] = (categoryData[sub.category] || 0) + monthly;
+    });
 
-    // Category breakdown for chart
-    const getCategoryData = () => {
-        const categoryTotals = {};
-        subscriptions.forEach(sub => {
-            const monthly = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
-            categoryTotals[sub.category] = (categoryTotals[sub.category] || 0) + monthly;
-        });
-        return categoryTotals;
-    };
-
-    const categoryData = getCategoryData();
     const categoryColors = {
         'Streaming': { color: '#9333ea', icon: '🎬' },
         'Software': { color: '#3b82f6', icon: '💻' },
@@ -92,30 +63,25 @@ window.UltimateDashboard = ({
         'Other': { color: '#6b7280', icon: '📦' }
     };
 
-    // Draw enhanced chart with glow
-    const chartRef = useRef(null);
-    const [chartDrawn, setChartDrawn] = useState(false);
-
+    // Draw chart
     useEffect(() => {
-        if (chartRef.current && Object.keys(categoryData).length > 0 && !chartDrawn) {
+        if (chartRef.current && Object.keys(categoryData).length > 0) {
             const canvas = chartRef.current;
             const ctx = canvas.getContext('2d');
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = 180;
+            const radius = 140;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const total = Object.values(categoryData).reduce((sum, val) => sum + val, 0);
 
-            // Draw segments with glow
             let startAngle = -Math.PI / 2;
             Object.entries(categoryData).forEach(([category, amount]) => {
                 const sliceAngle = (amount / total) * 2 * Math.PI;
                 const categoryColor = categoryColors[category]?.color || '#6b7280';
                 
-                // Glow effect
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = 15;
                 ctx.shadowColor = categoryColor;
                 
                 ctx.beginPath();
@@ -126,19 +92,19 @@ window.UltimateDashboard = ({
                 
                 ctx.shadowBlur = 0;
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 3;
                 ctx.stroke();
                 
                 startAngle += sliceAngle;
             });
 
-            // Center circle with gradient
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 110);
+            // Center circle
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 85);
             gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(1, '#f7fbfb');
+            gradient.addColorStop(1, '#f8fafc');
             
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 110, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY, 85, 0, 2 * Math.PI);
             ctx.fillStyle = gradient;
             ctx.fill();
             
@@ -146,59 +112,37 @@ window.UltimateDashboard = ({
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Center text with gradient
-            const textGradient = ctx.createLinearGradient(centerX - 60, centerY, centerX + 60, centerY);
-            textGradient.addColorStop(0, '#000952');
-            textGradient.addColorStop(1, '#2f4080');
-            
-            ctx.fillStyle = textGradient;
-            ctx.font = 'bold 48px Inter';
+            // Center text
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 36px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 15);
+            ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 10);
             
-            ctx.font = '16px Inter';
-            ctx.fillStyle = '#6f7d9e';
-            ctx.fillText('per month', centerX, centerY + 20);
-
-            setChartDrawn(true);
+            ctx.font = '14px Inter, sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText('per month', centerX, centerY + 15);
         }
-    }, [categoryData, chartDrawn, displayedMonthly]);
+    }, [categoryData, displayedMonthly]);
 
-    // Service logos mapping (simplified - in production, use actual images)
-    const getServiceLogo = (name) => {
-        const logos = {
-            'Netflix': '🔴',
-            'Spotify': '🟢',
-            'Hulu': '🟩',
-            'Disney+': '🔵',
-            'Amazon Prime': '🟠',
-            'YouTube': '🔴',
-            'Adobe': '🔴',
-            'Microsoft': '🟦',
-            'Google': '🔵',
-            'Apple': '⚫'
-        };
-        return logos[name] || '📦';
-    };
-
-    // Enhanced action cards with glassmorphism
+    // Quick action cards
     const actionCards = [
-        {
-            id: 'add',
-            icon: '➕',
-            title: 'Add New',
-            description: 'Add subscription manually',
-            gradient: 'from-blue-500 to-cyan-500',
-            onClick: onAddNew
-        },
         {
             id: 'scan-email',
             icon: '📧',
             title: 'Scan Emails',
-            description: 'Auto-detect from Gmail',
+            description: 'Auto-detect subscriptions',
             gradient: 'from-red-500 to-pink-500',
+            priority: true,
             onClick: onScanEmail
+        },
+        {
+            id: 'add',
+            icon: '➕',
+            title: 'Add New',
+            description: 'Manual entry',
+            gradient: 'from-blue-500 to-cyan-500',
+            onClick: onAddNew
         },
         {
             id: 'scan-receipt',
@@ -212,7 +156,7 @@ window.UltimateDashboard = ({
             id: 'bank',
             icon: '🏦',
             title: 'Connect Bank',
-            description: 'Auto-sync transactions',
+            description: 'Auto-sync',
             gradient: 'from-green-500 to-emerald-500',
             onClick: onConnectBank
         }
@@ -225,19 +169,22 @@ window.UltimateDashboard = ({
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                @keyframes slideInLeft {
-                    from { opacity: 0; transform: translateX(-30px); }
-                    to { opacity: 1; transform: translateX(0); }
-                }
                 @keyframes pulse {
                     0%, 100% { opacity: 1; }
                     50% { opacity: 0.8; }
                 }
+                @keyframes wave {
+                    0% { transform: rotate(0deg); }
+                    10% { transform: rotate(14deg); }
+                    20% { transform: rotate(-8deg); }
+                    30% { transform: rotate(14deg); }
+                    40% { transform: rotate(-4deg); }
+                    50% { transform: rotate(10deg); }
+                    60% { transform: rotate(0deg); }
+                    100% { transform: rotate(0deg); }
+                }
                 .animate-fade-in-up {
                     animation: fadeInUp 0.6s ease-out;
-                }
-                .animate-slide-in-left {
-                    animation: slideInLeft 0.5s ease-out;
                 }
                 .hover-lift {
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -246,24 +193,31 @@ window.UltimateDashboard = ({
                     transform: translateY(-4px);
                     box-shadow: 0 10px 30px rgba(0, 9, 82, 0.12);
                 }
-                .glassmorphic {
-                    background: rgba(255, 255, 255, 0.7);
-                    backdrop-filter: blur(40px) saturate(180%);
-                    border: 1px solid rgba(255, 255, 255, 0.5);
-                }
             `}</style>
 
-            {/* REDESIGNED WELCOME HEADER - Clean, No Gradient */}
-            <div className="mb-10 animate-fade-in-up">
-                <h1 className="text-5xl font-black mb-2 text-[#03093b]">
-                    Welcome back, {formattedName}! <span className="inline-block animate-[wave_0.5s_ease-in-out]" style={{animation: 'wave 0.5s ease-in-out', transformOrigin: '70% 70%'}}>👋</span>
-                </h1>
-                <p className="text-2xl text-[#6f7d9e]">
-                    You're spending <span className="font-bold text-[#000952]">${displayedMonthly.toFixed(2)}/month</span> on <span className="font-bold text-[#000952]">{activeCount}</span> subscriptions
+            {/* COMPACT WELCOME HEADER - 25% Shorter */}
+            <div className="mb-8 animate-fade-in-up">
+                <div className="flex items-baseline gap-3 mb-2">
+                    <h1 className="text-4xl font-black text-indigo-950">
+                        Welcome back, {formattedName}!
+                    </h1>
+                    <span 
+                        className="inline-block text-3xl" 
+                        style={{
+                            animation: 'wave 0.5s ease-in-out',
+                            transformOrigin: '70% 70%'
+                        }}
+                    >
+                        👋
+                    </span>
+                </div>
+                <p className="text-lg text-slate-600">
+                    You're spending <span className="font-bold text-indigo-900">${displayedMonthly.toFixed(2)}/month</span> on{' '}
+                    <span className="font-bold text-indigo-900">{activeCount}</span> subscriptions
                 </p>
             </div>
 
-            {/* URGENT TRIAL ALERTS - Floating Cards, Not Banners */}
+            {/* URGENT TRIAL ALERTS */}
             {urgentTrials.length > 0 && (
                 <div className="mb-8 space-y-4">
                     {urgentTrials.slice(0, 2).map((trial, index) => {
@@ -279,28 +233,27 @@ window.UltimateDashboard = ({
                                     boxShadow: '0 20px 60px rgba(239, 68, 68, 0.2)'
                                 }}
                             >
-                                <div className="absolute top-0 right-0 text-9xl opacity-5">⚠️</div>
-                                <div className="relative flex items-start gap-4">
-                                    <div className="text-5xl">{daysLeft === 0 ? '🚨' : '⏰'}</div>
+                                <div className="flex items-start gap-4">
+                                    <div className="text-4xl">{daysLeft === 0 ? '🚨' : '⏰'}</div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-2xl font-black text-[#7c2d12]">
+                                            <h3 className="text-xl font-black text-red-900">
                                                 {trial.name} Trial Ending {daysLeft === 0 ? 'TODAY!' : `in ${daysLeft} day${daysLeft > 1 ? 's' : ''}!`}
                                             </h3>
                                             {daysLeft === 0 && (
-                                                <span className="px-4 py-2 bg-red-600 text-white rounded-full text-sm font-bold animate-pulse">
+                                                <span className="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold animate-pulse">
                                                     URGENT
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-lg text-[#92400e] mb-4">
+                                        <p className="text-sm text-red-800 mb-3">
                                             Cancel now to avoid ${trial.cost} charge on {formatDate(trial.trial_end_date)}
                                         </p>
                                         <div className="flex gap-3">
-                                            <button className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-bold hover:shadow-xl transition-all transform hover:scale-105">
+                                            <button className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-bold hover:shadow-xl transition-all">
                                                 Cancel Trial Now
                                             </button>
-                                            <button className="px-6 py-3 bg-white text-[#7c2d12] border-2 border-[#92400e] rounded-xl font-bold hover:bg-[#fef3c7] transition-all">
+                                            <button className="px-4 py-2 bg-white text-red-900 border-2 border-red-300 rounded-xl font-bold hover:bg-red-50 transition-all">
                                                 Keep & Pay ${trial.cost}
                                             </button>
                                         </div>
@@ -312,228 +265,141 @@ window.UltimateDashboard = ({
                 </div>
             )}
 
-            {/* MAIN GRID - Enhanced Chart + Stats */}
+            {/* MAIN GRID - Chart + Stats */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-                {/* LEFT: Enhanced Spending Chart */}
+                {/* Enhanced Spending Chart */}
                 <div className="lg:col-span-2 animate-fade-in-up" style={{animationDelay: '200ms'}}>
-                    <div className="relative rounded-3xl p-10 overflow-hidden"
-                         style={{
-                             background: 'linear-gradient(135deg, #000952 0%, #2f4080 100%)',
-                             boxShadow: '0 20px 60px rgba(0, 9, 82, 0.3)'
-                         }}>
-                        {/* Decorative elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#99fcfa] opacity-10 rounded-full blur-3xl"></div>
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#99fcfa] opacity-10 rounded-full blur-3xl"></div>
+                    <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-indigo-950 to-blue-900 shadow-2xl">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400 opacity-10 rounded-full blur-3xl"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400 opacity-10 rounded-full blur-3xl"></div>
                         
-                        <h2 className="text-3xl font-black mb-8 text-white relative z-10">💰 Your Spending</h2>
+                        <h2 className="text-2xl font-black mb-8 text-white relative z-10">💰 Your Spending</h2>
                         
-                        <div className="flex flex-col lg:flex-row items-center gap-12 relative z-10">
-                            <div className="relative">
-                                <canvas ref={chartRef} width="400" height="400" style={{filter: 'drop-shadow(0 10px 30px rgba(153, 252, 250, 0.4))'}}></canvas>
-                            </div>
+                        {Object.keys(categoryData).length > 0 ? (
+                            <div className="flex flex-col lg:flex-row items-center gap-8 relative z-10">
+                                <div className="relative">
+                                    <canvas ref={chartRef} width="300" height="300" style={{filter: 'drop-shadow(0 10px 30px rgba(153, 252, 250, 0.3))'}}></canvas>
+                                </div>
 
-                            {/* Glassmorphic Legend */}
-                            <div className="flex-1 w-full space-y-3">
-                                {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount], index) => {
-                                    const catColor = categoryColors[category];
-                                    return (
-                                        <div 
-                                            key={category}
-                                            className="glassmorphic p-4 rounded-2xl hover-lift"
-                                            style={{
-                                                animationDelay: `${index * 100}ms`,
-                                                animation: 'slideInLeft 0.5s ease-out',
-                                                border: `1px solid rgba(153, 252, 250, 0.2)`
-                                            }}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-3xl">{catColor?.icon}</span>
-                                                    <span className="font-bold text-white">{category}</span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="font-black text-xl text-white">${amount.toFixed(2)}</p>
-                                                    <p className="text-sm text-[#99fcfa]">
-                                                        {((amount / totalMonthly) * 100).toFixed(0)}%
-                                                    </p>
+                                <div className="flex-1 w-full space-y-3">
+                                    {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount], index) => {
+                                        const catColor = categoryColors[category];
+                                        return (
+                                            <div 
+                                                key={category}
+                                                className="bg-white/10 backdrop-blur-lg p-4 rounded-2xl hover-lift border border-white/20"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-2xl">{catColor?.icon}</span>
+                                                        <span className="font-bold text-white">{category}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-black text-lg text-white">${amount.toFixed(2)}</p>
+                                                        <p className="text-xs text-cyan-300">
+                                                            {((amount / totalMonthly) * 100).toFixed(0)}%
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* RIGHT: Enhanced Stats Cards with Sparklines & Trends */}
-                <div className="space-y-4">
-                    {/* Monthly Total with Trend */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 hover-lift animate-fade-in-up"
-                         style={{
-                             background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)',
-                             border: '2px solid #c7d2fe',
-                             boxShadow: '0 4px 24px rgba(99, 102, 241, 0.12)',
-                             animationDelay: '300ms'
-                         }}>
-                        <div className="absolute top-0 right-0 text-8xl opacity-5">💰</div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#4338ca] mb-2">MONTHLY TOTAL</p>
-                        <p className="text-5xl font-black mb-2" style={{
-                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
-                        }}>
-                            ${displayedMonthly.toFixed(2)}
-                        </p>
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-green-600 font-bold text-sm flex items-center">
-                                ↓ $234 <span className="text-xs ml-1 text-gray-600">from last month</span>
-                            </span>
-                        </div>
-                        <div className="text-sm text-[#6366f1]">${displayedYearly.toFixed(2)}/year</div>
-                        {/* Mini Progress Bar */}
-                        {budgetStatus && (
-                            <div className="mt-4">
-                                <div className="h-2 bg-white/50 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] transition-all duration-1000"
-                                        style={{width: `${Math.min(budgetStatus.percentage, 100)}%`}}
-                                    ></div>
+                                        );
+                                    })}
                                 </div>
-                                <p className="text-xs text-gray-600 mt-1">
-                                    {budgetStatus.percentage.toFixed(0)}% of budget used
-                                </p>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Active Subs with Alert */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 hover-lift animate-fade-in-up"
-                         style={{
-                             background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
-                             border: '2px solid #bfdbfe',
-                             boxShadow: '0 4px 24px rgba(59, 130, 246, 0.12)',
-                             animationDelay: '400ms'
-                         }}>
-                        <div className="absolute top-0 right-0 text-8xl opacity-5">💳</div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#1e40af] mb-2">ACTIVE SUBS</p>
-                        <p className="text-5xl font-black mb-2" style={{
-                            background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
-                        }}>
-                            {activeCount}
-                        </p>
-                        {!isPro && activeCount >= 5 && (
-                            <div className="mt-3 p-3 bg-orange-100 border border-orange-300 rounded-xl">
-                                <p className="text-xs font-bold text-orange-800 flex items-center gap-2">
-                                    ⚠️ Free limit reached
-                                </p>
-                                <button className="mt-2 w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all">
-                                    Upgrade to Pro
+                        ) : (
+                            <div className="text-center py-16 relative z-10">
+                                <div className="text-6xl mb-4">📊</div>
+                                <p className="text-white text-xl font-bold mb-2">No spending data yet</p>
+                                <p className="text-cyan-200 mb-6">Add your first subscription to see spending trends</p>
+                                <button 
+                                    onClick={onAddNew}
+                                    className="px-6 py-3 bg-cyan-400 text-indigo-950 rounded-xl font-bold hover:bg-cyan-300 transition-all"
+                                >
+                                    ➕ Add Your First Subscription
                                 </button>
                             </div>
                         )}
                     </div>
+                </div>
 
-                    {/* Money Saved */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 hover-lift animate-fade-in-up"
-                         style={{
-                             background: 'linear-gradient(135deg, #d1fae5 0%, #d1f4e0 100%)',
-                             border: '2px solid #a7f3d0',
-                             boxShadow: '0 4px 24px rgba(16, 185, 129, 0.12)',
-                             animationDelay: '500ms'
-                         }}>
-                        <div className="absolute top-0 right-0 text-8xl opacity-5">💸</div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#065f46] mb-2">MONEY SAVED</p>
-                        <p className="text-5xl font-black mb-2" style={{
-                            background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
-                        }}>
-                            ${savingsYearly.toFixed(0)}
+                {/* Stats Column - Hidden on xl (shown in right panel) */}
+                <div className="space-y-4 lg:hidden">
+                    {/* Mobile stats */}
+                    <div className="rounded-2xl p-6 bg-gradient-to-br from-indigo-100 to-blue-100 border border-indigo-200">
+                        <p className="text-xs font-bold uppercase text-indigo-700 mb-2">Monthly Total</p>
+                        <p className="text-4xl font-black bg-gradient-to-r from-indigo-800 to-purple-700 bg-clip-text text-transparent">
+                            ${totalMonthly.toFixed(2)}
                         </p>
-                        <p className="text-sm text-[#059669]">this year</p>
                     </div>
                 </div>
             </div>
 
-            {/* QUICK ACTIONS - Glassmorphic Cards */}
+            {/* QUICK ACTIONS - Scan Emails First */}
             <div className="mb-10">
-                <h2 className="text-3xl font-black mb-6 text-[#03093b]">⚡ Quick Actions</h2>
+                <h2 className="text-2xl font-black mb-6 text-indigo-950">⚡ Quick Actions</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {actionCards.map((card, index) => (
                         <button
                             key={card.id}
                             onClick={card.onClick}
-                            className="glassmorphic rounded-3xl p-8 text-left hover-lift group relative overflow-hidden border-2 border-transparent"
+                            className={`relative overflow-hidden bg-white/80 backdrop-blur-sm rounded-3xl p-6 text-left hover-lift group border-2 ${
+                                card.priority ? 'border-red-300 shadow-lg shadow-red-200' : 'border-transparent'
+                            }`}
                             style={{
                                 animationDelay: `${index * 100}ms`,
-                                animation: 'fadeInUp 0.6s ease-out forwards',
-                                opacity: 0
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = 'rgba(153, 252, 250, 0.5)';
-                                e.currentTarget.style.boxShadow = '0 20px 60px rgba(99, 102, 241, 0.15)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = 'transparent';
-                                e.currentTarget.style.boxShadow = 'none';
+                                animation: 'fadeInUp 0.6s ease-out forwards'
                             }}
                         >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                            <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
                             <div className="relative z-10">
-                                <div className={`w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-4xl transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}
-                                     style={{boxShadow: '0 10px 30px rgba(99, 102, 241, 0.2)'}}>
+                                <div className={`w-14 h-14 mb-4 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-3xl transform group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-lg`}>
                                     {card.icon}
                                 </div>
-                                <h3 className="font-black text-xl text-[#03093b] mb-2 group-hover:text-[#000952] transition-colors">{card.title}</h3>
-                                <p className="text-sm text-[#6f7d9e] group-hover:text-[#282f58] transition-colors">{card.description}</p>
+                                <h3 className="font-black text-lg text-indigo-950 mb-1">{card.title}</h3>
+                                <p className="text-sm text-slate-600">{card.description}</p>
+                                {card.priority && (
+                                    <div className="mt-2 text-xs font-bold text-red-600 flex items-center gap-1">
+                                        ✨ Recommended
+                                    </div>
+                                )}
                             </div>
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* RECENT SUBSCRIPTIONS - Enhanced Cards */}
+            {/* RECENT SUBSCRIPTIONS */}
             {subscriptions.length > 0 && (
                 <div>
-                    <h2 className="text-3xl font-black mb-6 text-[#03093b]">📊 Recent Subscriptions</h2>
+                    <h2 className="text-2xl font-black mb-6 text-indigo-950">📊 Recent Subscriptions</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {subscriptions.slice(0, 6).map((sub, index) => {
                             const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
                             return (
                                 <div 
                                     key={sub.id}
-                                    className="glassmorphic rounded-3xl p-6 hover-lift border-2 border-transparent"
+                                    className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 hover-lift border-2 border-transparent hover:border-cyan-200"
                                     style={{
                                         animationDelay: `${index * 100}ms`,
-                                        animation: 'fadeInUp 0.6s ease-out forwards',
-                                        opacity: 0
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.borderColor = 'rgba(153, 252, 250, 0.5)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.borderColor = 'transparent';
+                                        animation: 'fadeInUp 0.6s ease-out forwards'
                                     }}
                                 >
                                     <div className="flex items-start gap-4 mb-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl font-black text-white">
-                                            {getServiceLogo(sub.name)}
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-black text-white shadow-lg">
+                                            {sub.name.charAt(0)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-lg text-[#03093b] truncate">{sub.name}</h3>
-                                            <p className="text-sm text-[#6f7d9e]">{sub.category}</p>
+                                            <h3 className="font-bold text-base text-indigo-950 truncate">{sub.name}</h3>
+                                            <p className="text-sm text-slate-600">{sub.category}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-baseline justify-between mb-2">
-                                        <span className="text-3xl font-black text-[#000952]">${monthlyCost.toFixed(2)}</span>
-                                        <span className="text-sm text-[#6f7d9e]">/month</span>
+                                        <span className="text-2xl font-black text-indigo-950">${monthlyCost.toFixed(2)}</span>
+                                        <span className="text-sm text-slate-500">/month</span>
                                     </div>
                                     {sub.next_billing_date && (
-                                        <div className="mt-3 p-3 bg-white/50 rounded-xl">
-                                            <p className="text-xs font-semibold text-[#6f7d9e] flex items-center gap-2">
+                                        <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                            <p className="text-xs font-semibold text-slate-600 flex items-center gap-2">
                                                 📅 Next: {formatDate(sub.next_billing_date)}
                                             </p>
                                         </div>
@@ -544,20 +410,10 @@ window.UltimateDashboard = ({
                     </div>
                 </div>
             )}
-
-            {/* Wave animation for emoji */}
-            <style>{`
-                @keyframes wave {
-                    0% { transform: rotate(0deg); }
-                    10% { transform: rotate(14deg); }
-                    20% { transform: rotate(-8deg); }
-                    30% { transform: rotate(14deg); }
-                    40% { transform: rotate(-4deg); }
-                    50% { transform: rotate(10deg); }
-                    60% { transform: rotate(0deg); }
-                    100% { transform: rotate(0deg); }
-                }
-            `}</style>
         </div>
     );
 };
+
+window.UltimateDashboard = EnhancedUltimateDashboard;
+
+export default EnhancedUltimateDashboard;
