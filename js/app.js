@@ -2,23 +2,7 @@
 // AURABILIO MAIN APP - app.js
 // Clean, organized main application logic
 // ==============================================
-// In app.js, find where you render the layout:
-return (
-    <window.AurabilioLayout
-        user={user}
-        subscriptions={subscriptions}
-        trials={trials}
-        totalMonthly={totalMonthly}
-        totalYearly={totalYearly}
-        monthlyBudget={monthlyBudget}
-        onNavigate={setCurrentView}
-        currentView={currentView}
-        onLogout={handleLogout}
-        isPro={isPro}  // Make sure this is passed!
-    >
-        {renderContent()}
-    </window.AurabilioLayout>
-);
+
 const { useState, useEffect } = React;
 
 // Supabase Client Setup
@@ -154,6 +138,7 @@ function AurabilioApp() {
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [currentView, setCurrentView] = useState('dashboard');
+    const [monthlyBudget, setMonthlyBudget] = useState(null);
 
     // Initialize Supabase on mount
     useEffect(() => {
@@ -371,7 +356,7 @@ function AurabilioApp() {
                         trials={trials}
                         totalMonthly={totalMonthly}
                         totalYearly={totalYearly}
-                        monthlyBudget={null}
+                        monthlyBudget={monthlyBudget}
                         cancelledSubscriptions={[]}
                         onNavigate={setCurrentView}
                         onAddNew={() => setCurrentView('subscriptions')}
@@ -465,6 +450,31 @@ function AurabilioApp() {
                         totalYearly={totalYearly}
                     />
                 ) : <div className="text-center py-16 text-lynch">Loading analytics component...</div>;
+
+            case 'timeline':
+                return window.TimelineView ? (
+                    <window.TimelineView
+                        subscriptions={subscriptions}
+                        trials={trials}
+                    />
+                ) : <div className="text-center py-16 text-lynch">Loading timeline component...</div>;
+
+            case 'budget':
+                return (
+                    <div className="max-w-2xl mx-auto">
+                        <div className="card-frosted p-8">
+                            <h2 className="text-3xl font-black mb-6 text-tangaroa">Budget Settings</h2>
+                            <p className="text-lynch mb-4">Set your monthly subscription budget</p>
+                            <input
+                                type="number"
+                                value={monthlyBudget || ''}
+                                onChange={(e) => setMonthlyBudget(parseFloat(e.target.value))}
+                                placeholder="Enter monthly budget"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-picton-blue focus:ring-2 focus:ring-picton-blue/20 outline-none"
+                            />
+                        </div>
+                    </div>
+                );
 
             case 'settings':
                 return (
@@ -640,76 +650,24 @@ function AurabilioApp() {
         );
     }
 
-    // Main App Layout
+    // ============================================
+    // MAIN APP WITH 3-COLUMN LAYOUT
+    // ============================================
     return (
-        <div className="min-h-screen bg-catskill-white">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <img src="/images/aurabilio.svg" alt="Aurabilio" style={{ height: '40px' }} />
-                            <div>
-                                <h1 className="text-xl font-black text-tangaroa">Aurabilio</h1>
-                                <p className="text-xs text-lynch">Subscription Manager</p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                            <div className="text-right hidden md:block">
-                                <p className="text-sm font-bold text-tangaroa">${totalMonthly.toFixed(2)}/mo</p>
-                                <p className="text-xs text-lynch">${totalYearly.toFixed(2)}/year</p>
-                            </div>
-                            <button onClick={handleLogout} className="btn btn-ghost text-sm">
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Navigation */}
-            <nav className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex space-x-8 overflow-x-auto">
-                        {['dashboard', 'subscriptions', 'trials', 'analytics', 'settings'].map(view => (
-                            <button
-                                key={view}
-                                onClick={() => setCurrentView(view)}
-                                className={`py-4 px-2 border-b-2 font-medium text-sm capitalize whitespace-nowrap ${
-                                    currentView === view
-                                        ? 'border-picton-blue text-picton-blue'
-                                        : 'border-transparent text-lynch hover:text-tangaroa hover:border-gray-300'
-                                }`}
-                            >
-                                {view}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </nav>
-
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {loading && currentView !== 'dashboard' ? (
-                    <div className="text-center py-16">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-picton-blue mx-auto"></div>
-                        <p className="text-lynch mt-4">Loading...</p>
-                    </div>
-                ) : (
-                    renderContent()
-                )}
-            </main>
-
-            {/* Footer */}
-            <footer className="bg-white border-t border-gray-200 mt-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <p className="text-center text-lynch text-sm">
-                        © 2024 Aurabilio. Manage your subscriptions with ease.
-                    </p>
-                </div>
-            </footer>
-        </div>
+        <window.AurabilioLayout
+            user={user}
+            subscriptions={subscriptions}
+            trials={trials}
+            totalMonthly={totalMonthly}
+            totalYearly={totalYearly}
+            monthlyBudget={monthlyBudget}
+            onNavigate={setCurrentView}
+            currentView={currentView}
+            onLogout={handleLogout}
+            isPro={isPro}
+        >
+            {renderContent()}
+        </window.AurabilioLayout>
     );
 }
 

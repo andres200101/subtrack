@@ -63,6 +63,16 @@
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* ====================================== */
+    /* LAYOUT VARIABLES (NEW - FOR 3-COLUMN) */
+    /* ====================================== */
+    --sidebar-width: 260px;
+    --sidebar-collapsed: 80px;
+    --sidebar-hidden: 5px;
+    --topbar-height: 72px;
+    --rightpanel-width: 320px;
+    --bottomnav-height: 64px;
 }
 
 /* Import Inter Font */
