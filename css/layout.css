@@ -1,7 +1,7 @@
 /* 
  * ============================================
- * AURABILIO 3-COLUMN LAYOUT SYSTEM
- * Sidebar | Main Content | Right Panel
+ * AURABILIO 3-COLUMN LAYOUT SYSTEM - FIXED
+ * Better colors, contrast, and spacing
  * ============================================
  */
 
@@ -12,7 +12,7 @@
     grid-template-rows: var(--topbar-height) 1fr;
     height: 100vh;
     overflow: hidden;
-    background: var(--catskill-white);
+    background: #f8fafc;
 }
 
 /* When sidebar is collapsed */
@@ -34,10 +34,10 @@
 .topbar {
     grid-column: 1 / -1;
     grid-row: 1;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border-bottom: 1px solid rgba(0, 9, 82, 0.1);
+    border-bottom: 1px solid #e2e8f0;
     padding: 0 var(--space-6);
     display: flex;
     align-items: center;
@@ -46,13 +46,14 @@
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .topbar-left {
     display: flex;
     align-items: center;
     gap: var(--space-4);
+    min-width: 240px;
 }
 
 .topbar-center {
@@ -67,6 +68,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    min-width: 120px;
+    justify-content: flex-end;
 }
 
 /* Logo */
@@ -74,10 +77,15 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    font-weight: var(--font-black);
-    font-size: var(--text-xl);
-    color: var(--text-primary);
+    font-weight: 900;
+    font-size: 1.25rem;
+    color: var(--stratos);
     text-decoration: none;
+    transition: all var(--transition-base);
+}
+
+.topbar-logo:hover {
+    opacity: 0.8;
 }
 
 .topbar-logo-icon {
@@ -99,14 +107,15 @@
 }
 
 .topbar-logo-title {
-    font-size: var(--text-xl);
-    font-weight: var(--font-black);
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--stratos);
 }
 
 .topbar-logo-subtitle {
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-    font-weight: var(--font-medium);
+    font-size: 0.75rem;
+    color: var(--lynch);
+    font-weight: 600;
 }
 
 /* Stats Rail (Center) */
@@ -117,29 +126,29 @@
     padding: var(--space-2) var(--space-6);
     background: rgba(0, 9, 82, 0.04);
     border-radius: var(--radius-full);
-    border: 1px solid rgba(0, 9, 82, 0.06);
+    border: 1px solid rgba(0, 9, 82, 0.08);
 }
 
 .topbar-stat {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: var(--text-sm);
+    font-size: 0.875rem;
     white-space: nowrap;
 }
 
 .topbar-stat-icon {
-    font-size: var(--text-lg);
+    font-size: 1.125rem;
 }
 
 .topbar-stat-value {
-    font-weight: var(--font-black);
-    color: var(--text-primary);
+    font-weight: 900;
+    color: var(--stratos);
 }
 
 .topbar-stat-change {
-    font-size: var(--text-xs);
-    font-weight: var(--font-semibold);
+    font-size: 0.75rem;
+    font-weight: 700;
     color: var(--success);
 }
 
@@ -153,11 +162,16 @@
 .topbar-search input {
     width: 100%;
     padding: var(--space-3) var(--space-4) var(--space-3) var(--space-10);
-    border: 2px solid var(--gray-200);
+    border: 2px solid #e2e8f0;
     border-radius: var(--radius-xl);
-    font-size: var(--text-sm);
-    background: var(--surface-primary);
+    font-size: 0.875rem;
+    background: white;
+    color: var(--stratos);
     transition: all var(--transition-base);
+}
+
+.topbar-search input::placeholder {
+    color: var(--lynch);
 }
 
 .topbar-search input:focus {
@@ -171,8 +185,8 @@
     left: var(--space-4);
     top: 50%;
     transform: translateY(-50%);
-    font-size: var(--text-lg);
-    color: var(--text-secondary);
+    font-size: 1.125rem;
+    color: var(--lynch);
 }
 
 /* Topbar Actions */
@@ -192,13 +206,15 @@
     border: none;
     background: transparent;
     border-radius: var(--radius-lg);
-    font-size: var(--text-xl);
+    font-size: 1.25rem;
     cursor: pointer;
     transition: all var(--transition-base);
+    color: var(--lynch);
 }
 
 .topbar-button:hover {
-    background: rgba(0, 9, 82, 0.06);
+    background: rgba(0, 9, 82, 0.08);
+    color: var(--stratos);
 }
 
 .topbar-button-badge {
@@ -211,7 +227,7 @@
     background: var(--danger);
     color: white;
     font-size: 10px;
-    font-weight: var(--font-bold);
+    font-weight: 700;
     border-radius: var(--radius-full);
     display: flex;
     align-items: center;
@@ -269,8 +285,8 @@
 
 .sidebar-logo-text {
     color: white;
-    font-weight: var(--font-black);
-    font-size: var(--text-lg);
+    font-weight: 900;
+    font-size: 1.125rem;
 }
 
 /* Sidebar Navigation */
@@ -286,10 +302,10 @@
 
 .nav-section-title {
     padding: var(--space-2) var(--space-6);
-    font-size: var(--text-xs);
-    font-weight: var(--font-bold);
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: var(--tracking-wider);
+    letter-spacing: 0.1em;
     color: rgba(255, 255, 255, 0.5);
     margin-bottom: var(--space-2);
 }
@@ -301,8 +317,8 @@
     padding: var(--space-3) var(--space-6);
     color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
@@ -336,7 +352,7 @@
 }
 
 .nav-item-icon {
-    font-size: var(--text-xl);
+    font-size: 1.25rem;
     flex-shrink: 0;
 }
 
@@ -350,7 +366,7 @@
     background: var(--anakiwa);
     color: var(--stratos);
     font-size: 10px;
-    font-weight: var(--font-bold);
+    font-weight: 700;
     border-radius: var(--radius-full);
 }
 
@@ -364,6 +380,7 @@
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     transition: all var(--transition-base);
+    font-weight: 600;
 }
 
 .sidebar-toggle:hover {
@@ -376,21 +393,22 @@
     grid-column: 2;
     grid-row: 2;
     overflow-y: auto;
-    background: var(--catskill-white);
+    background: #f8fafc;
 }
 
 .content-wrapper {
     padding: var(--space-8);
     max-width: 1400px;
     margin: 0 auto;
+    min-height: 100%;
 }
 
 /* ===== RIGHT PANEL (RIGHT COLUMN) ===== */
 .quick-stats {
     grid-column: 3;
     grid-row: 2;
-    background: var(--surface-primary);
-    border-left: 1px solid var(--gray-200);
+    background: white;
+    border-left: 1px solid #e2e8f0;
     padding: var(--space-6);
     overflow-y: auto;
     transition: all var(--transition-slow);
@@ -408,9 +426,9 @@
 }
 
 .quick-stats-title {
-    font-size: var(--text-lg);
-    font-weight: var(--font-bold);
-    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--stratos);
 }
 
 .quick-stats-collapse {
@@ -424,10 +442,13 @@
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all var(--transition-base);
+    color: var(--lynch);
+    font-size: 1.25rem;
 }
 
 .quick-stats-collapse:hover {
-    background: var(--gray-100);
+    background: #f1f5f9;
+    color: var(--stratos);
 }
 
 /* Stat Card in Right Panel */
@@ -447,31 +468,31 @@
 }
 
 .stat-card .stat-label {
-    font-size: var(--text-xs);
-    font-weight: var(--font-semibold);
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: var(--tracking-wider);
+    letter-spacing: 0.1em;
     color: rgba(255, 255, 255, 0.7);
     margin-bottom: var(--space-2);
 }
 
 .stat-card .stat-value {
-    font-size: var(--text-4xl);
-    font-weight: var(--font-black);
+    font-size: 2.25rem;
+    font-weight: 900;
     color: white;
     line-height: 1;
     margin-bottom: var(--space-2);
 }
 
 .stat-card .stat-change {
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
+    font-size: 0.875rem;
+    font-weight: 700;
     color: var(--anakiwa);
 }
 
 /* ===== RESPONSIVE BREAKPOINTS ===== */
 
-/* Laptop (1024px) - Collapse right panel to icon */
+/* Laptop (1280px) - Hide right panel */
 @media (max-width: 1280px) {
     .app-container {
         grid-template-columns: var(--sidebar-width) 1fr 0;
@@ -497,7 +518,7 @@
     }
 }
 
-/* Tablet (768px) - Collapse sidebar to icons */
+/* Tablet (1024px) - Collapse sidebar to icons */
 @media (max-width: 1024px) {
     .app-container {
         grid-template-columns: var(--sidebar-collapsed) 1fr 0;
@@ -518,7 +539,7 @@
     }
 }
 
-/* Mobile (640px) - Hide sidebar, bottom nav */
+/* Mobile (768px) - Hide sidebar, bottom nav */
 @media (max-width: 768px) {
     .app-container {
         grid-template-columns: 1fr;
@@ -542,6 +563,7 @@
     
     .topbar {
         padding: 0 var(--space-4);
+        height: 60px;
     }
     
     .topbar-center {
@@ -564,8 +586,8 @@
     .bottom-nav {
         grid-column: 1;
         grid-row: 3;
-        background: var(--surface-primary);
-        border-top: 1px solid var(--gray-200);
+        background: white;
+        border-top: 1px solid #e2e8f0;
         display: flex;
         justify-content: space-around;
         padding: var(--space-2);
@@ -577,10 +599,10 @@
         align-items: center;
         gap: 4px;
         padding: var(--space-2);
-        color: var(--text-secondary);
+        color: var(--lynch);
         text-decoration: none;
         font-size: 10px;
-        font-weight: var(--font-semibold);
+        font-weight: 700;
         border-radius: var(--radius-lg);
         flex: 1;
         max-width: 80px;
@@ -598,7 +620,7 @@
     }
 }
 
-/* Extra small mobile (375px) */
+/* Extra small mobile (480px) */
 @media (max-width: 480px) {
     .topbar {
         padding: 0 var(--space-3);
@@ -619,7 +641,7 @@
     .topbar-button {
         width: 36px;
         height: 36px;
-        font-size: var(--text-lg);
+        font-size: 1.125rem;
     }
 }
 
@@ -645,16 +667,16 @@
 
 .main-content::-webkit-scrollbar-track,
 .quick-stats::-webkit-scrollbar-track {
-    background: var(--gray-100);
+    background: #f1f5f9;
 }
 
 .main-content::-webkit-scrollbar-thumb,
 .quick-stats::-webkit-scrollbar-thumb {
-    background: var(--gray-300);
+    background: #cbd5e1;
     border-radius: var(--radius-full);
 }
 
 .main-content::-webkit-scrollbar-thumb:hover,
 .quick-stats::-webkit-scrollbar-thumb:hover {
-    background: var(--gray-400);
+    background: #94a3b8;
 }
