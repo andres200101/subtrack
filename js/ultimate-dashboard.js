@@ -198,172 +198,249 @@
             { type: 'trial_started', name: subscriptions[2]?.name || 'Adobe', amount: 0, time: '3 days ago', icon: '🟡' }
         ].slice(0, Math.min(subscriptions.length, 3));
 
-        // Draw category donut chart (REFINED - reduced glow)
-        useEffect(() => {
-            if (chartRef.current && Object.keys(categoryData).length > 0) {
-                const canvas = chartRef.current;
-                const ctx = canvas.getContext('2d');
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
-                const radius = 140;
+        // In ultimate-dashboard.js, find the donut chart drawing (around line 180)
+// Replace the entire useEffect for chartRef:
 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+useEffect(() => {
+    if (chartRef.current && Object.keys(categoryData).length > 0) {
+        const canvas = chartRef.current;
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const outerRadius = 140;
+        const innerRadius = 90; // Thicker donut
 
-                const total = Object.values(categoryData).reduce((sum, val) => sum + val, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                let startAngle = -Math.PI / 2;
-                Object.entries(categoryData).forEach(([category, amount]) => {
-                    const sliceAngle = (amount / total) * 2 * Math.PI;
-                    const categoryColor = categoryColors[category]?.color || '#6b7280';
-                    
-                    // REDUCED shadow blur from 15 to 10
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = categoryColor + '40'; // Added 40 for transparency
-                    
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
-                    ctx.lineTo(centerX, centerY);
-                    ctx.fillStyle = categoryColor;
-                    ctx.fill();
-                    
-                    ctx.shadowBlur = 0;
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-                    
-                    startAngle += sliceAngle;
-                });
+        const total = Object.values(categoryData).reduce((sum, val) => sum + val, 0);
 
-                // Center circle
-                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 85);
-                gradient.addColorStop(0, '#ffffff');
-                gradient.addColorStop(1, '#f8fafc');
-                
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, 85, 0, 2 * Math.PI);
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                
-                ctx.strokeStyle = 'rgba(76, 52, 245, 0.2)'; // Changed from cyan to primary
-                ctx.lineWidth = 2;
-                ctx.stroke();
+        // ENHANCED: Brand-aligned colors with better contrast
+        const enhancedColors = {
+            'Streaming': { color: '#9333ea', light: '#c084fc' },
+            'Software': { color: '#3b82f6', light: '#60a5fa' },
+            'Gaming': { color: '#10b981', light: '#34d399' },
+            'Fitness': { color: '#f59e0b', light: '#fbbf24' },
+            'News': { color: '#ef4444', light: '#f87171' },
+            'Music': { color: '#ec4899', light: '#f472b6' },
+            'Cloud Storage': { color: '#06b6d4', light: '#22d3ee' },
+            'Other': { color: '#6b7280', light: '#9ca3af' }
+        };
 
-                // Center text
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 36px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 10);
-                
-                ctx.font = '14px Inter, sans-serif';
-                ctx.fillStyle = '#64748b';
-                ctx.fillText('per month', centerX, centerY + 15);
+        let startAngle = -Math.PI / 2;
+
+        // Draw segments with subtle shadow
+        Object.entries(categoryData).forEach(([category, amount]) => {
+            const sliceAngle = (amount / total) * 2 * Math.PI;
+            const colors = enhancedColors[category] || { color: '#6b7280', light: '#9ca3af' };
+            
+            // Subtle shadow (FIXED - reduced from 15 to 6)
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = colors.color + '30';
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2;
+            
+            // Draw outer arc
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, outerRadius, startAngle, startAngle + sliceAngle);
+            ctx.arc(centerX, centerY, innerRadius, startAngle + sliceAngle, startAngle, true);
+            ctx.closePath();
+            
+            // Gradient fill for depth
+            const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+            gradient.addColorStop(0, colors.light);
+            gradient.addColorStop(1, colors.color);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Clean edges
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            startAngle += sliceAngle;
+        });
+
+        // ENHANCED: Premium center circle with subtle gradient
+        const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, innerRadius - 5);
+        centerGradient.addColorStop(0, '#ffffff');
+        centerGradient.addColorStop(1, '#f8fafc');
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius - 5, 0, 2 * Math.PI);
+        ctx.fillStyle = centerGradient;
+        ctx.fill();
+        
+        // Elegant border
+        ctx.strokeStyle = 'rgba(76, 52, 245, 0.15)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // ENHANCED: Hierarchical center text
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Currency symbol
+        ctx.fillStyle = '#4C34F5';
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.fillText('$', centerX - 35, centerY - 12);
+        
+        // Amount
+        ctx.font = '900 42px Inter, sans-serif';
+        ctx.fillText(displayedMonthly.toFixed(0), centerX + 15, centerY - 12);
+        
+        // Label
+        ctx.font = '600 14px Inter, sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('per month', centerX, centerY + 22);
+        
+        // Subtle percentage indicator
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.fillStyle = '#10b981';
+        ctx.fillText('â–² 4.2%', centerX, centerY + 40);
+    }
+}, [categoryData, displayedMonthly]);
+
+        //trend chart drawing section 
+useEffect(() => {
+    if (trendChartRef.current && trendData.length > 0) {
+        const canvas = trendChartRef.current;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 60; // Increased from 40 for better spacing
+        const chartWidth = width - padding * 2;
+        const chartHeight = height - padding * 2;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const maxValue = Math.max(...trendData.map(d => d.value));
+        const minValue = Math.min(...trendData.map(d => d.value)) * 0.9;
+        const valueRange = maxValue - minValue;
+
+        // ENHANCED: Draw grid with better visibility
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)'; // Increased opacity
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]); // Dashed lines
+        
+        for (let i = 0; i <= 4; i++) {
+            const y = padding + (chartHeight / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(padding, y);
+            ctx.lineTo(width - padding, y);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]); // Reset
+
+        // ENHANCED: Draw gradient area fill with brand colors
+        const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+        gradient.addColorStop(0, 'rgba(76, 52, 245, 0.15)'); // Primary color
+        gradient.addColorStop(0.5, 'rgba(76, 52, 245, 0.08)');
+        gradient.addColorStop(1, 'rgba(76, 52, 245, 0)');
+        
+        ctx.beginPath();
+        trendData.forEach((point, index) => {
+            const x = padding + (chartWidth / (trendData.length - 1)) * index;
+            const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
             }
-        }, [categoryData, displayedMonthly]);
+        });
+        ctx.lineTo(width - padding, height - padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
 
-        // Draw trend line chart (with subtle grid)
-        useEffect(() => {
-            if (trendChartRef.current && trendData.length > 0) {
-                const canvas = trendChartRef.current;
-                const ctx = canvas.getContext('2d');
-                const width = canvas.width;
-                const height = canvas.height;
-                const padding = 40;
-                const chartWidth = width - padding * 2;
-                const chartHeight = height - padding * 2;
+        // ENHANCED: Draw line with gradient stroke
+        const lineGradient = ctx.createLinearGradient(padding, 0, width - padding, 0);
+        lineGradient.addColorStop(0, '#4C34F5'); // Primary
+        lineGradient.addColorStop(0.5, '#6B54FF'); // Primary-light
+        lineGradient.addColorStop(1, '#00B6C9'); // Secondary
+        
+        ctx.beginPath();
+        ctx.strokeStyle = lineGradient;
+        ctx.lineWidth = 4; // Thicker line
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(76, 52, 245, 0.3)';
+        ctx.shadowBlur = 8;
 
-                ctx.clearRect(0, 0, width, height);
-
-                const maxValue = Math.max(...trendData.map(d => d.value));
-                const minValue = Math.min(...trendData.map(d => d.value)) * 0.9;
-                const valueRange = maxValue - minValue;
-
-                // Draw grid lines (SUBTLE - opacity 0.5)
-                ctx.strokeStyle = 'rgba(226, 232, 240, 0.5)';
-                ctx.lineWidth = 1;
-                for (let i = 0; i <= 4; i++) {
-                    const y = padding + (chartHeight / 4) * i;
-                    ctx.beginPath();
-                    ctx.moveTo(padding, y);
-                    ctx.lineTo(width - padding, y);
-                    ctx.stroke();
-                }
-
-                // Draw line
-                ctx.beginPath();
-                ctx.strokeStyle = '#3b82f6';
-                ctx.lineWidth = 3;
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-
-                trendData.forEach((point, index) => {
-                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
-                    const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
-                    
-                    if (index === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                });
-                ctx.stroke();
-
-                // Draw gradient fill
-                const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-                gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
-                
-                ctx.beginPath();
-                trendData.forEach((point, index) => {
-                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
-                    const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
-                    
-                    if (index === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                });
-                ctx.lineTo(width - padding, height - padding);
-                ctx.lineTo(padding, height - padding);
-                ctx.closePath();
-                ctx.fillStyle = gradient;
-                ctx.fill();
-
-                // Draw points
-                trendData.forEach((point, index) => {
-                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
-                    const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
-                    
-                    ctx.beginPath();
-                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#3b82f6';
-                    ctx.fill();
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                });
-
-                // Draw month labels
-                ctx.fillStyle = '#64748b';
-                ctx.font = '12px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                trendData.forEach((point, index) => {
-                    if (index % 2 === 0) {
-                        const x = padding + (chartWidth / (trendData.length - 1)) * index;
-                        ctx.fillText(point.month, x, height - 15);
-                    }
-                });
-
-                // Draw value labels
-                ctx.textAlign = 'right';
-                for (let i = 0; i <= 4; i++) {
-                    const value = maxValue - (valueRange / 4) * i;
-                    const y = padding + (chartHeight / 4) * i;
-                    ctx.fillText(`$${value.toFixed(0)}`, padding - 10, y + 4);
-                }
+        trendData.forEach((point, index) => {
+            const x = padding + (chartWidth / (trendData.length - 1)) * index;
+            const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
             }
-        }, [trendData]);
+        });
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // ENHANCED: Draw premium points with ring effect
+        trendData.forEach((point, index) => {
+            const x = padding + (chartWidth / (trendData.length - 1)) * index;
+            const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+            
+            // Outer ring
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = index === trendData.length - 1 ? '#4C34F5' : '#6B54FF';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Inner dot
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = index === trendData.length - 1 ? '#4C34F5' : '#6B54FF';
+            ctx.fill();
+        });
+
+        // ENHANCED: Draw Y-axis labels with better formatting
+        ctx.fillStyle = '#64748b';
+        ctx.font = '700 13px Inter, sans-serif'; // Bolder
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        
+        for (let i = 0; i <= 4; i++) {
+            const value = maxValue - (valueRange / 4) * i;
+            const y = padding + (chartHeight / 4) * i;
+            ctx.fillText(`$${Math.round(value).toLocaleString()}`, padding - 15, y);
+        }
+
+        // ENHANCED: Draw X-axis labels with current month highlighted
+        ctx.font = '600 13px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        trendData.forEach((point, index) => {
+            const x = padding + (chartWidth / (trendData.length - 1)) * index;
+            const isCurrentMonth = index === trendData.length - 1;
+            
+            if (index % 2 === 0 || isCurrentMonth) {
+                // Background pill for current month
+                if (isCurrentMonth) {
+                    ctx.fillStyle = '#4C34F5';
+                    ctx.beginPath();
+                    ctx.roundRect(x - 25, height - 35, 50, 24, 12);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                } else {
+                    ctx.fillStyle = '#64748b';
+                }
+                
+                ctx.fillText(point.month, x, height - 23);
+            }
+        });
+    }
+}, [trendData]);
 
         // Quick action cards
         const actionCards = [
@@ -411,49 +488,55 @@
         return (
             <div className="max-w-7xl mx-auto pb-12">
                 <style>{`
-                    @keyframes fadeInUp {
-                        from { opacity: 0; transform: translateY(20px); }
-                        to { opacity: 1; transform: translateY(0); }
-                    }
-                    @keyframes pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.8; }
-                    }
-                    @keyframes wave {
-                        0% { transform: rotate(0deg); }
-                        10% { transform: rotate(14deg); }
-                        20% { transform: rotate(-8deg); }
-                        30% { transform: rotate(14deg); }
-                        40% { transform: rotate(-4deg); }
-                        50% { transform: rotate(10deg); }
-                        60% { transform: rotate(0deg); }
-                        100% { transform: rotate(0deg); }
-                    }
-                    .animate-fade-in-up {
-                        animation: fadeInUp 0.6s ease-out;
-                    }
-                    .hover-lift {
-                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    }
-                    .hover-lift:hover {
-                        transform: translateY(-4px);
-                        box-shadow: 0 10px 30px rgba(0, 9, 82, 0.12);
-                    }
-                    /* COMPACT WELCOME HEADER */
-                    .welcome-header {
-                        padding: 14px 0 !important;
-                        margin-bottom: 24px;
-                    }
-                    .welcome-header h1 {
-                        font-size: 28px !important;
-                        margin-bottom: 4px !important;
-                        line-height: 1.4;
-                    }
-                    .welcome-header p {
-                        font-size: 15px !important;
-                        line-height: 1.55;
-                    }
-                `}</style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ENHANCED: Better card spacing */
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-lift:hover {
+        transform: translateY(-6px) scale(1.01); /* Added scale */
+        box-shadow: 0 20px 40px rgba(0, 9, 82, 0.15),
+                    0 8px 16px rgba(153, 252, 250, 0.1); /* Dual shadow */
+    }
+    
+    /* ENHANCED: Chart containers need more breathing room */
+    canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+    
+    /* Better text rendering */
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+    
+    @keyframes shine {
+                to { transform: translateX(100%); }
+            }
+    
+    /* Compact headers with better typography */
+    .welcome-header {
+        padding: 16px 0 !important;
+        margin-bottom: 28px;
+    }
+    .welcome-header h1 {
+        font-size: 32px !important;
+        margin-bottom: 6px !important;
+        line-height: 1.3;
+        letter-spacing: -0.02em; /* Tighter tracking */
+    }
+    .welcome-header p {
+        font-size: 16px !important;
+        line-height: 1.6;
+        color: #64748b;
+    }
+`}</style>
 
                 {/* COMPACT WELCOME HEADER (REDUCED 30-40%) */}
                 <div className="welcome-header animate-fade-in-up">
@@ -588,30 +671,74 @@
                                         <canvas ref={chartRef} width="300" height="300" style={{filter: 'drop-shadow(0 5px 15px rgba(153, 252, 250, 0.2))'}}></canvas>
                                     </div>
 
-                                    <div className="flex-1 w-full space-y-3">
-                                        {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount]) => {
-                                            const catColor = categoryColors[category];
-                                            return (
-                                                <div 
-                                                    key={category}
-                                                    className="bg-white/10 backdrop-blur-lg p-4 rounded-2xl hover-lift border border-white/20"
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="text-2xl">{catColor?.icon}</span>
-                                                            <span className="font-bold text-white">{category}</span>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="font-black text-lg text-white">${amount.toFixed(2)}</p>
-                                                            <p className="text-xs text-cyan-300">
-                                                                {((amount / totalMonthly) * 100).toFixed(0)}%
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    // In ultimate-dashboard.js, update the category list section (around line 220):
+
+// Replace the category list rendering with this enhanced version:
+<div className="flex-1 w-full space-y-3">
+    {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount], index) => {
+        const catColor = categoryColors[category];
+        const percentage = ((amount / totalMonthly) * 100).toFixed(0);
+        
+        return (
+            <div 
+                key={category}
+                className="group relative bg-white/10 backdrop-blur-lg p-5 rounded-2xl hover-lift border border-white/20 transition-all duration-300"
+                style={{
+                    animationDelay: `${index * 100}ms`,
+                    animation: 'fadeInUp 0.6s ease-out forwards'
+                }}
+            >
+                {/* Progress bar background */}
+                <div 
+                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                        background: `linear-gradient(90deg, ${catColor?.color}15 0%, transparent ${percentage}%)`
+                    }}
+                />
+                
+                <div className="relative z-10 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        {/* Icon with glow effect */}
+                        <div 
+                            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110"
+                            style={{
+                                background: `linear-gradient(135deg, ${catColor?.color}20 0%, ${catColor?.color}10 100%)`,
+                                boxShadow: `0 4px 12px ${catColor?.color}20`
+                            }}
+                        >
+                            {catColor?.icon}
+                        </div>
+                        
+                        <div>
+                            <span className="font-bold text-white text-lg block mb-1">{category}</span>
+                            <div className="flex items-center gap-2">
+                                <div className="h-2 w-24 bg-white/20 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full rounded-full transition-all duration-1000"
+                                        style={{
+                                            width: `${percentage}%`,
+                                            background: catColor?.color
+                                        }}
+                                    />
+                                </div>
+                                <span className="text-xs text-cyan-300 font-semibold">{percentage}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="text-right">
+                        <p className="font-black text-2xl text-white group-hover:text-cyan-300 transition-colors">
+                            ${amount.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-cyan-200 font-semibold mt-1">
+                            ${(amount / 30).toFixed(2)}/day
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    })}
+</div>
                                 </div>
                             ) : (
                                 <div className="text-center py-16 relative z-10">
@@ -759,31 +886,46 @@
                     <h2 className="text-2xl font-black mb-6 text-indigo-950">⚡ Quick Actions</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {actionCards.map((card, index) => (
-                            <button
-                                key={card.id}
-                                onClick={card.onClick}
-                                className={`relative overflow-hidden bg-white/80 backdrop-blur-sm rounded-3xl p-6 text-left hover-lift group border-2 ${
-                                    card.priority ? 'border-red-300 shadow-lg shadow-red-200' : 'border-transparent'
-                                }`}
-                                style={{
-                                    animationDelay: `${index * 100}ms`,
-                                    animation: 'fadeInUp 0.6s ease-out forwards'
-                                }}
-                            >
-                                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
-                                <div className="relative z-10">
-                                    <div className={`w-14 h-14 mb-4 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-3xl transform group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-lg`}>
-                                        {card.icon}
-                                    </div>
-                                    <h3 className="font-black text-lg text-indigo-950 mb-1">{card.title}</h3>
-                                    <p className="text-sm text-slate-600">{card.description}</p>
-                                    {card.priority && (
-                                        <div className="mt-2 text-xs font-bold text-red-600 flex items-center gap-1">
-                                            ✨ Recommended
-                                        </div>
-                                    )}
-                                </div>
-                            </button>
+                            // In the Quick Actions section, enhance the buttons:
+<button
+    key={card.id}
+    onClick={card.onClick}
+    className={`group relative overflow-hidden bg-white rounded-3xl p-8 text-left border-2 transition-all duration-300 ${
+        card.priority 
+            ? 'border-red-300 shadow-lg shadow-red-100 hover:shadow-xl hover:shadow-red-200' 
+            : 'border-slate-200 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-100'
+    }`}
+    style={{
+        animationDelay: `${index * 100}ms`,
+        animation: 'fadeInUp 0.6s ease-out forwards'
+    }}
+>
+    {/* Animated gradient background */}
+    <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-all duration-500 group-hover:scale-110`}></div>
+    
+    {/* Shine effect on hover */}
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+         style={{
+             background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+             transform: 'translateX(-100%)',
+             animation: 'shine 1.5s ease-in-out infinite'
+         }}
+    />
+    
+    <div className="relative z-10">
+        <div className={`w-16 h-16 mb-5 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-4xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg group-hover:shadow-xl`}>
+            {card.icon}
+        </div>
+        <h3 className="font-black text-xl text-indigo-950 mb-2 group-hover:text-indigo-700 transition-colors">{card.title}</h3>
+        <p className="text-sm text-slate-600 mb-3">{card.description}</p>
+        {card.priority && (
+            <div className="flex items-center gap-2 text-xs font-bold text-red-600">
+                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                Recommended
+            </div>
+        )}
+    </div>
+</button>
                         ))}
                     </div>
                 </div>
