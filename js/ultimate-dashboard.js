@@ -670,10 +670,6 @@ useEffect(() => {
                                     <div className="relative">
                                         <canvas ref={chartRef} width="300" height="300" style={{filter: 'drop-shadow(0 5px 15px rgba(153, 252, 250, 0.2))'}}></canvas>
                                     </div>
-
-                                    // In ultimate-dashboard.js, update the category list section (around line 220):
-
-// Replace the category list rendering with this enhanced version:
 <div className="flex-1 w-full space-y-3">
     {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount], index) => {
         const catColor = categoryColors[category];
