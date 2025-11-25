@@ -554,46 +554,23 @@
                 )}
 
                 {/* SPENDING TREND CHART */}
-{subscriptions.length > 0 && (
-    <section className="mb-10 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-        <div
-            className="
-                rounded-3xl 
-                p-8 
-                shadow-[0_6px_20px_rgba(0,0,0,0.06)]
-                border border-slate-100
-                bg-gradient-to-br from-white to-slate-50/50
-                backdrop-blur-sm
-            "
-        >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-
-                {/* Title */}
-                <h2 className="text-[1.75rem] font-extrabold text-indigo-950 tracking-tight flex items-center gap-2">
-                    <span className="text-indigo-600">📈</span>
-                    Spending Trend
-                </h2>
-
-                {/* Legend / Filter */}
-                <div className="flex items-center gap-4 text-sm">
-                    <span className="text-slate-500 font-medium">Last 12 months</span>
-
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100">
-                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                        <span className="text-slate-700 font-medium">
-                            Monthly spend
-                        </span>
+                {subscriptions.length > 0 && (
+                    <div className="mb-8 animate-fade-in-up" style={{animationDelay: '100ms'}}>
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-200">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-black text-indigo-950">📈 Spending Trend</h2>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-slate-600">Last 12 months</span>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                        <span className="text-slate-500">Monthly spend</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <canvas ref={trendChartRef} width="900" height="250"></canvas>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Chart */}
-            <canvas ref={trendChartRef} className="w-full h-[260px]"></canvas>
-        </div>
-    </section>
-)}
-
+                )}
 
                 {/* MAIN GRID - Charts + Insights */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
