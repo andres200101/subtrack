@@ -1,6 +1,7 @@
 // ==============================================
-// AURABILIO POLISHED 3-COLUMN LAYOUT
-// Beautiful navy & cyan theme
+// AURABILIO POLISHED 3-COLUMN LAYOUT - REFINED
+// Right panel as overlay drawer (CRITICAL FIX)
+// Compact banners, yearly total, unified styling
 // ==============================================
 
 window.AurabilioLayout = ({ 
@@ -23,10 +24,8 @@ window.AurabilioLayout = ({
         return saved === 'true';
     });
     
-    const [rightPanelCollapsed, setRightPanelCollapsed] = useState(() => {
-        const saved = localStorage.getItem('aurabilio_rightpanel_collapsed');
-        return saved === 'true';
-    });
+    // RIGHT PANEL NOW USES OVERLAY STATE (NOT COLLAPSED)
+    const [rightPanelOpen, setRightPanelOpen] = useState(false);
     
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -34,9 +33,17 @@ window.AurabilioLayout = ({
         localStorage.setItem('aurabilio_sidebar_collapsed', sidebarCollapsed);
     }, [sidebarCollapsed]);
 
+    // Close right panel on ESC key
     useEffect(() => {
-        localStorage.setItem('aurabilio_rightpanel_collapsed', rightPanelCollapsed);
-    }, [rightPanelCollapsed]);
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && rightPanelOpen) {
+                setRightPanelOpen(false);
+            }
+        };
+        
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [rightPanelOpen]);
 
     // Calculate stats
     const monthlyChange = 234;
@@ -92,6 +99,14 @@ window.AurabilioLayout = ({
         )
     );
 
+    const BarChart = ({ size = 20 }) => (
+        React.createElement('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 },
+            React.createElement('line', { x1: 12, y1: 20, x2: 12, y2: 10 }),
+            React.createElement('line', { x1: 18, y1: 20, x2: 18, y2: 4 }),
+            React.createElement('line', { x1: 6, y1: 20, x2: 6, y2: 16 })
+        )
+    );
+
     // Navigation
     const navSections = [
         {
@@ -124,14 +139,86 @@ window.AurabilioLayout = ({
         // Styles
         React.createElement('style', null, `
             .sidebar-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-            .hover-glow:hover { box-shadow: 0 0 20px rgba(153, 252, 250, 0.3); }
-            @media (max-width: 1024px) { .stats-rail { display: none !important; } }
+            .hover-glow:hover { box-shadow: 0 0 20px rgba(76, 52, 245, 0.3); }
+            
+            /* Right panel overlay styles */
+            .quick-stats {
+                position: fixed;
+                right: 0;
+                top: 64px;
+                bottom: 0;
+                width: 320px;
+                background: white;
+                border-left: 1px solid #e2e8f0;
+                padding: 24px;
+                overflow-y: auto;
+                z-index: 45;
+                transform: translateX(100%);
+                transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+            }
+            
+            .quick-stats.show {
+                transform: translateX(0);
+            }
+            
+            .rightpanel-backdrop {
+                position: fixed;
+                inset: 0;
+                top: 64px;
+                background: rgba(0, 0, 0, 0.4);
+                z-index: 44;
+                display: none;
+                animation: fadeIn 0.2s ease-out;
+            }
+            
+            .rightpanel-backdrop.show {
+                display: block;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            @media (max-width: 1024px) { 
+                .stats-rail { display: none !important; } 
+            }
+            
             @media (max-width: 768px) {
-                .mobile-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 40; }
-                .mobile-sidebar { position: fixed; left: 0; top: 64px; bottom: 0; width: 260px; z-index: 50; transform: translateX(-100%); transition: transform 0.3s ease; }
-                .mobile-sidebar.open { transform: translateX(0); }
+                .mobile-menu-overlay { 
+                    position: fixed; 
+                    inset: 0; 
+                    background: rgba(0, 0, 0, 0.5); 
+                    z-index: 40; 
+                }
+                .mobile-sidebar { 
+                    position: fixed; 
+                    left: 0; 
+                    top: 64px; 
+                    bottom: 0; 
+                    width: 260px; 
+                    z-index: 50; 
+                    transform: translateX(-100%); 
+                    transition: transform 0.3s ease; 
+                }
+                .mobile-sidebar.open { 
+                    transform: translateX(0); 
+                }
+                .quick-stats {
+                    display: none;
+                }
+                .rightpanel-backdrop {
+                    display: none !important;
+                }
             }
         `),
+
+        // RIGHT PANEL BACKDROP
+        rightPanelOpen && React.createElement('div', {
+            className: 'rightpanel-backdrop show',
+            onClick: () => setRightPanelOpen(false)
+        }),
 
         // TOP BAR
         React.createElement('header', { 
@@ -155,7 +242,7 @@ window.AurabilioLayout = ({
                 )
             ),
 
-            // Stats Rail
+            // Stats Rail with YEARLY TOTAL
             React.createElement('div', { className: 'stats-rail hidden md:flex items-center gap-4 px-6 py-2 bg-indigo-50/80 rounded-full border border-indigo-100' },
                 React.createElement('div', { className: 'flex items-center gap-2' },
                     React.createElement('span', { className: 'text-lg' }, '💰'),
@@ -173,10 +260,25 @@ window.AurabilioLayout = ({
                 React.createElement('div', { className: 'flex items-center gap-2' },
                     React.createElement('span', { className: 'text-lg' }, '🎁'),
                     React.createElement('span', { className: 'font-black text-indigo-950' }, trialsCount)
+                ),
+                // NEW: YEARLY TOTAL
+                React.createElement('div', { className: 'w-px h-6 bg-indigo-200' }),
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                    React.createElement('span', { className: 'text-sm text-slate-600' }, 'Yearly:'),
+                    React.createElement('span', { className: 'font-black text-indigo-950 text-sm' }, 
+                        `$${totalYearly.toFixed(0)}`
+                    )
                 )
             ),
 
             React.createElement('div', { className: 'flex items-center gap-2' },
+                React.createElement('button', { 
+                    className: 'relative p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600',
+                    onClick: () => setRightPanelOpen(!rightPanelOpen),
+                    title: 'Quick Stats'
+                },
+                    React.createElement(BarChart, { size: 20 })
+                ),
                 React.createElement('button', { className: 'relative p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600' },
                     React.createElement(Bell, { size: 20 }),
                     urgentTrials > 0 && React.createElement('span', { className: 'absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center' }, urgentTrials)
@@ -235,97 +337,91 @@ window.AurabilioLayout = ({
                 React.createElement('div', { className: 'max-w-7xl mx-auto p-6 lg:p-8' }, children)
             ),
 
-            // RIGHT PANEL - POLISHED
+            // RIGHT PANEL - OVERLAY DRAWER
             React.createElement('aside', {
-                className: `sidebar-transition bg-white border-l border-slate-200 flex-col hidden xl:flex ${rightPanelCollapsed ? 'w-0 opacity-0' : 'w-80'}`
+                className: `quick-stats ${rightPanelOpen ? 'show' : ''}`
             },
-                !rightPanelCollapsed && React.createElement(React.Fragment, null,
-                    React.createElement('div', { className: 'p-6 border-b border-slate-200 flex items-center justify-between' },
-                        React.createElement('h3', { className: 'font-bold text-indigo-950' }, 'Quick Stats'),
-                        React.createElement('button', {
-                            onClick: () => setRightPanelCollapsed(true),
-                            className: 'p-1.5 hover:bg-slate-100 rounded-lg transition-colors',
-                            title: 'Collapse panel'
-                        }, React.createElement(ChevronRight, { size: 18 }))
+                React.createElement('div', { className: 'flex items-center justify-between mb-6' },
+                    React.createElement('h3', { className: 'font-bold text-indigo-950' }, 'Quick Stats'),
+                    React.createElement('button', {
+                        onClick: () => setRightPanelOpen(false),
+                        className: 'p-1.5 hover:bg-slate-100 rounded-lg transition-colors',
+                        title: 'Close panel'
+                    }, React.createElement(X, { size: 18 }))
+                ),
+
+                React.createElement('div', { className: 'space-y-4' },
+                    // Monthly Total Card
+                    React.createElement('div', { 
+                        className: 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 hover:shadow-lg transition-all group' 
+                    },
+                        React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5 transform group-hover:scale-110 transition-transform' }, '💰'),
+                        React.createElement('div', { className: 'relative' },
+                            React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2' }, 'Monthly Total'),
+                            React.createElement('p', { className: 'text-4xl font-black bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-2' }, `$${totalMonthly.toFixed(2)}`),
+                            React.createElement('div', { className: 'flex items-center gap-2 text-sm mb-2' },
+                                React.createElement('span', { className: 'text-green-600 font-bold' }, `↑ $${monthlyChange}`),
+                                React.createElement('span', { className: 'text-slate-500' }, 'from last month')
+                            ),
+                            React.createElement('div', { className: 'text-sm text-indigo-600 font-semibold' }, `$${totalYearly.toFixed(2)}/year`)
+                        )
                     ),
 
-                    React.createElement('div', { className: 'flex-1 overflow-y-auto p-6 space-y-4' },
-                        // Monthly Total Card
-                        React.createElement('div', { 
-                            className: 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 hover:shadow-lg transition-all group' 
+                    // Active Subs Card
+                    React.createElement('div', { 
+                        className: 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 hover:shadow-lg transition-all group' 
+                    },
+                        React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5 transform group-hover:scale-110 transition-transform' }, '💳'),
+                        React.createElement('div', { className: 'relative' },
+                            React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-blue-600 mb-2' }, 'Active Subscriptions'),
+                            React.createElement('p', { className: 'text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent' }, activeCount),
+                            !isPro && activeCount >= 5 && React.createElement('p', { className: 'text-xs text-orange-600 font-semibold mt-2' }, '⚠️ Free limit reached')
+                        )
+                    ),
+
+                    // Budget Card (if set)
+                    budgetPercent && React.createElement('div', { 
+                        className: `relative overflow-hidden rounded-2xl p-6 border hover:shadow-lg transition-all group ${budgetPercent > 100 ? 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'}` 
+                    },
+                        React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5 transform group-hover:scale-110 transition-transform' }, '📊'),
+                        React.createElement('div', { className: 'relative' },
+                            React.createElement('p', { className: `text-xs font-bold uppercase tracking-wider mb-2 ${budgetPercent > 100 ? 'text-red-600' : 'text-green-600'}` }, 'Budget Status'),
+                            React.createElement('p', { className: `text-4xl font-black ${budgetPercent > 100 ? 'text-red-600' : 'text-green-600'}` }, `${budgetPercent}%`),
+                            React.createElement('p', { className: `text-sm font-semibold mt-2 ${budgetPercent > 100 ? 'text-red-700' : 'text-green-700'}` }, 
+                                budgetPercent > 100 ? `$${(totalMonthly - monthlyBudget).toFixed(2)} over budget` : `$${(monthlyBudget - totalMonthly).toFixed(2)} remaining`
+                            )
+                        )
+                    ),
+
+                    // Quick Actions
+                    React.createElement('div', { className: 'space-y-2 pt-4' },
+                        React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-slate-600 mb-3' }, 'Quick Actions'),
+                        React.createElement('button', { 
+                            className: 'w-full p-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2 group' 
                         },
-                            React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5 transform group-hover:scale-110 transition-transform' }, '💰'),
-                            React.createElement('div', { className: 'relative' },
-                                React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2' }, 'Monthly Total'),
-                                React.createElement('p', { className: 'text-4xl font-black bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent mb-2' }, `$${totalMonthly.toFixed(2)}`),
-                                React.createElement('div', { className: 'flex items-center gap-2 text-sm mb-2' },
-                                    React.createElement('span', { className: 'text-green-600 font-bold' }, `↑ $${monthlyChange}`),
-                                    React.createElement('span', { className: 'text-slate-500' }, 'from last month')
-                                ),
-                                React.createElement('div', { className: 'text-sm text-indigo-600 font-semibold' }, `$${totalYearly.toFixed(2)}/year`)
-                            )
+                            React.createElement('span', { className: 'text-xl' }, '📧'),
+                            React.createElement('span', null, 'Scan Emails'),
+                            React.createElement('span', { className: 'text-xs opacity-90' }, 'Auto-detect')
                         ),
-
-                        // Active Subs Card
-                        React.createElement('div', { 
-                            className: 'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 hover:shadow-lg transition-all group' 
-                        },
-                            React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5 transform group-hover:scale-110 transition-transform' }, '💳'),
-                            React.createElement('div', { className: 'relative' },
-                                React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-blue-600 mb-2' }, 'Active Subscriptions'),
-                                React.createElement('p', { className: 'text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent' }, activeCount),
-                                !isPro && activeCount >= 5 && React.createElement('p', { className: 'text-xs text-orange-600 font-semibold mt-2' }, '⚠️ Free limit reached')
-                            )
+                        React.createElement('button', { className: 'w-full p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2' }, 
+                            '➕ Add New'
                         ),
+                        React.createElement('button', { className: 'w-full p-3 bg-white border-2 border-slate-200 hover:border-indigo-300 text-slate-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2' }, 
+                            '📊 Analytics'
+                        )
+                    ),
 
-                        // Budget Card (if set)
-                        budgetPercent && React.createElement('div', { 
-                            className: `relative overflow-hidden rounded-2xl p-6 border hover:shadow-lg transition-all group ${budgetPercent > 100 ? 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'}` 
-                        },
-                            React.createElement('div', { className: 'absolute top-0 right-0 text-6xl opacity-5 transform group-hover:scale-110 transition-transform' }, '📊'),
-                            React.createElement('div', { className: 'relative' },
-                                React.createElement('p', { className: `text-xs font-bold uppercase tracking-wider mb-2 ${budgetPercent > 100 ? 'text-red-600' : 'text-green-600'}` }, 'Budget Status'),
-                                React.createElement('p', { className: `text-4xl font-black ${budgetPercent > 100 ? 'text-red-600' : 'text-green-600'}` }, `${budgetPercent}%`),
-                                React.createElement('p', { className: `text-sm font-semibold mt-2 ${budgetPercent > 100 ? 'text-red-700' : 'text-green-700'}` }, 
-                                    budgetPercent > 100 ? `$${(totalMonthly - monthlyBudget).toFixed(2)} over budget` : `$${(monthlyBudget - totalMonthly).toFixed(2)} remaining`
-                                )
-                            )
-                        ),
-
-                        // Quick Actions
-                        React.createElement('div', { className: 'space-y-2 pt-4' },
-                            React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-slate-600 mb-3' }, 'Quick Actions'),
-                            React.createElement('button', { className: 'w-full p-4 btn btn-warning flex items-center justify-center gap-2 group' },
-                                React.createElement('span', { className: 'text-xl' }, '📧'),
-                                React.createElement('span', null, 'Scan Emails'),
-                                React.createElement('span', { className: 'text-xs opacity-90' }, 'Auto-detect')
-                            ),
-                            React.createElement('button', { className: 'w-full p-3 btn btn-primary flex items-center justify-center gap-2' }, 
-                                '➕ Add New'
-                            ),
-                            React.createElement('button', { className: 'w-full p-3 btn btn-ghost flex items-center justify-center gap-2' }, 
-                                '📊 Analytics'
-                            )
-                        ),
-
-                        // Upcoming
-                        React.createElement('div', { className: 'p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100' },
-                            React.createElement('p', { className: 'text-xs font-bold uppercase tracking-wider text-green-700 mb-3' }, 'Next 7 Days'),
-                            React.createElement('div', { className: 'text-center py-4' },
-                                React.createElement('p', { className: 'text-3xl mb-2' }, '🎉'),
-                                React.createElement('p', { className: 'font-bold text-green-800 mb-1' }, 'No upcoming charges'),
-                                React.createElement('p', { className: 'text-sm text-green-600' }, "You're all set!")
-                            )
+                    // Last Updated Timestamp
+                    React.createElement('div', { className: 'pt-4 text-center' },
+                        React.createElement('p', { className: 'text-xs text-slate-500' },
+                            'Last synced: ',
+                            React.createElement('span', { className: 'font-semibold text-slate-700' }, '2 minutes ago'),
+                            ' ',
+                            React.createElement('span', { className: 'cursor-pointer hover:text-indigo-600' }, '↻')
                         )
                     )
                 )
-            ),
-
-            rightPanelCollapsed && React.createElement('button', {
-                onClick: () => setRightPanelCollapsed(false),
-                className: 'hidden xl:flex items-center justify-center w-8 bg-white border-l border-slate-200 hover:bg-slate-50 transition-colors',
-                title: 'Expand panel'
-            }, React.createElement(ChevronLeft, { size: 18, className: 'text-slate-600' }))
+            )
         ),
 
         // Mobile Menu
