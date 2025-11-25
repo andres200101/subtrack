@@ -20,6 +20,7 @@ const EnhancedUltimateDashboard = ({
 }) => {
     const [displayedMonthly, setDisplayedMonthly] = useState(0);
     const chartRef = useRef(null);
+    const trendChartRef = useRef(null);
 
     // Animated count-up
     useEffect(() => {
@@ -63,7 +64,116 @@ const EnhancedUltimateDashboard = ({
         'Other': { color: '#6b7280', icon: '📦' }
     };
 
-    // Draw chart
+    // Generate mock 12-month trend data (you'll replace this with real historical data)
+    const generateTrendData = () => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentMonth = new Date().getMonth();
+        const data = [];
+        
+        for (let i = 11; i >= 0; i--) {
+            const monthIndex = (currentMonth - i + 12) % 12;
+            // Mock data - replace with actual historical spending
+            const baseValue = totalMonthly * (0.7 + Math.random() * 0.4);
+            data.push({
+                month: months[monthIndex],
+                value: i === 0 ? totalMonthly : baseValue
+            });
+        }
+        return data;
+    };
+
+    const trendData = generateTrendData();
+
+    // Get upcoming bills (next 7 days)
+    const getUpcomingBills = () => {
+        const today = new Date();
+        const upcoming = subscriptions
+            .filter(sub => sub.next_billing_date)
+            .map(sub => ({
+                ...sub,
+                daysUntil: Math.ceil((new Date(sub.next_billing_date) - today) / (1000 * 60 * 60 * 24))
+            }))
+            .filter(sub => sub.daysUntil >= 0 && sub.daysUntil <= 7)
+            .sort((a, b) => a.daysUntil - b.daysUntil)
+            .slice(0, 5);
+        return upcoming;
+    };
+
+    const upcomingBills = getUpcomingBills();
+
+    // Get top 5 most expensive
+    const topExpensive = [...subscriptions]
+        .sort((a, b) => {
+            const aMonthly = calculateMonthlyEquivalent(parseFloat(a.cost), a.billing_cycle);
+            const bMonthly = calculateMonthlyEquivalent(parseFloat(b.cost), b.billing_cycle);
+            return bMonthly - aMonthly;
+        })
+        .slice(0, 5);
+
+    // Smart insights
+    const generateInsights = () => {
+        const insights = [];
+        
+        // Unused subscriptions insight
+        const potentiallyUnused = subscriptions.filter(sub => 
+            sub.last_used && getDaysRemaining(sub.last_used) < -60
+        );
+        if (potentiallyUnused.length > 0) {
+            insights.push({
+                icon: '💡',
+                text: `${potentiallyUnused.length} subscription${potentiallyUnused.length > 1 ? 's haven\'t' : ' hasn\'t'} been used in 60+ days`,
+                type: 'warning',
+                action: 'Review'
+            });
+        }
+
+        // Trial ending soon
+        if (urgentTrials.length > 0) {
+            insights.push({
+                icon: '⏰',
+                text: `${urgentTrials.length} trial${urgentTrials.length > 1 ? 's' : ''} ending within 3 days`,
+                type: 'urgent',
+                action: 'Manage'
+            });
+        }
+
+        // Budget insight
+        if (monthlyBudget && totalMonthly > monthlyBudget) {
+            const overage = totalMonthly - monthlyBudget;
+            insights.push({
+                icon: '📊',
+                text: `You're $${overage.toFixed(2)} over your monthly budget`,
+                type: 'alert',
+                action: 'Optimize'
+            });
+        }
+
+        // Savings potential
+        if (cancelledSubscriptions.length > 0) {
+            const totalSaved = cancelledSubscriptions.reduce((sum, sub) => 
+                sum + calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle), 0
+            );
+            insights.push({
+                icon: '🎉',
+                text: `You've saved $${totalSaved.toFixed(2)}/month by cancelling ${cancelledSubscriptions.length} subscription${cancelledSubscriptions.length > 1 ? 's' : ''}`,
+                type: 'success',
+                action: null
+            });
+        }
+
+        return insights.slice(0, 3);
+    };
+
+    const insights = generateInsights();
+
+    // Recent activity (mock - you'll replace with real activity log)
+    const recentActivity = [
+        { type: 'renewed', name: 'Netflix', amount: 15.99, time: '2 hours ago', icon: '🔵' },
+        { type: 'added', name: 'Spotify', amount: 9.99, time: '1 day ago', icon: '🟢' },
+        { type: 'trial_started', name: 'Adobe Creative', amount: 0, time: '3 days ago', icon: '🟡' }
+    ].slice(0, subscriptions.length > 0 ? 3 : 0);
+
+    // Draw category donut chart
     useEffect(() => {
         if (chartRef.current && Object.keys(categoryData).length > 0) {
             const canvas = chartRef.current;
@@ -125,6 +235,111 @@ const EnhancedUltimateDashboard = ({
         }
     }, [categoryData, displayedMonthly]);
 
+    // Draw trend line chart
+    useEffect(() => {
+        if (trendChartRef.current && trendData.length > 0) {
+            const canvas = trendChartRef.current;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Find max value for scaling
+            const maxValue = Math.max(...trendData.map(d => d.value));
+            const minValue = Math.min(...trendData.map(d => d.value)) * 0.9;
+            const valueRange = maxValue - minValue;
+
+            // Draw grid lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // Draw line
+            ctx.beginPath();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            trendData.forEach((point, index) => {
+                const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+
+            // Draw gradient fill
+            const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            
+            ctx.beginPath();
+            trendData.forEach((point, index) => {
+                const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw points
+            trendData.forEach((point, index) => {
+                const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            // Draw month labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            trendData.forEach((point, index) => {
+                if (index % 2 === 0) { // Show every other month
+                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                    ctx.fillText(point.month, x, height - 15);
+                }
+            });
+
+            // Draw value labels
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const value = maxValue - (valueRange / 4) * i;
+                const y = padding + (chartHeight / 4) * i;
+                ctx.fillText(`$${value.toFixed(0)}`, padding - 10, y + 4);
+            }
+        }
+    }, [trendData]);
+
     // Quick action cards
     const actionCards = [
         {
@@ -162,6 +377,12 @@ const EnhancedUltimateDashboard = ({
         }
     ];
 
+    const getDayLabel = (days) => {
+        if (days === 0) return 'Today';
+        if (days === 1) return 'Tomorrow';
+        return `in ${days} days`;
+    };
+
     return (
         <div className="max-w-7xl mx-auto pb-12">
             <style>{`
@@ -195,7 +416,7 @@ const EnhancedUltimateDashboard = ({
                 }
             `}</style>
 
-            {/* COMPACT WELCOME HEADER - 25% Shorter */}
+            {/* COMPACT WELCOME HEADER */}
             <div className="mb-8 animate-fade-in-up">
                 <div className="flex items-baseline gap-3 mb-2">
                     <h1 className="text-4xl font-black text-indigo-950">
@@ -265,15 +486,34 @@ const EnhancedUltimateDashboard = ({
                 </div>
             )}
 
-            {/* MAIN GRID - Chart + Stats */}
+            {/* SPENDING TREND CHART - NEW! */}
+            {subscriptions.length > 0 && (
+                <div className="mb-8 animate-fade-in-up" style={{animationDelay: '100ms'}}>
+                    <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-200">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-black text-indigo-950">📈 Spending Trend</h2>
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="text-slate-600">Last 12 months</span>
+                                <div className="flex items-center gap-1">
+                                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                    <span className="text-slate-500">Monthly spend</span>
+                                </div>
+                            </div>
+                        </div>
+                        <canvas ref={trendChartRef} width="900" height="250"></canvas>
+                    </div>
+                </div>
+            )}
+
+            {/* MAIN GRID - Chart + Insights */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-                {/* Enhanced Spending Chart */}
+                {/* Enhanced Category Breakdown Chart */}
                 <div className="lg:col-span-2 animate-fade-in-up" style={{animationDelay: '200ms'}}>
                     <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-indigo-950 to-blue-900 shadow-2xl">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400 opacity-10 rounded-full blur-3xl"></div>
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400 opacity-10 rounded-full blur-3xl"></div>
                         
-                        <h2 className="text-2xl font-black mb-8 text-white relative z-10">💰 Your Spending</h2>
+                        <h2 className="text-2xl font-black mb-8 text-white relative z-10">💰 Category Breakdown</h2>
                         
                         {Object.keys(categoryData).length > 0 ? (
                             <div className="flex flex-col lg:flex-row items-center gap-8 relative z-10">
@@ -322,98 +562,205 @@ const EnhancedUltimateDashboard = ({
                     </div>
                 </div>
 
-                {/* Stats Column - Hidden on xl (shown in right panel) */}
-                <div className="space-y-4 lg:hidden">
-                    {/* Mobile stats */}
-                    <div className="rounded-2xl p-6 bg-gradient-to-br from-indigo-100 to-blue-100 border border-indigo-200">
-                        <p className="text-xs font-bold uppercase text-indigo-700 mb-2">Monthly Total</p>
-                        <p className="text-4xl font-black bg-gradient-to-r from-indigo-800 to-purple-700 bg-clip-text text-transparent">
-                            ${totalMonthly.toFixed(2)}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* QUICK ACTIONS - Scan Emails First */}
-            <div className="mb-10">
-                <h2 className="text-2xl font-black mb-6 text-indigo-950">⚡ Quick Actions</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {actionCards.map((card, index) => (
-                        <button
-                            key={card.id}
-                            onClick={card.onClick}
-                            className={`relative overflow-hidden bg-white/80 backdrop-blur-sm rounded-3xl p-6 text-left hover-lift group border-2 ${
-                                card.priority ? 'border-red-300 shadow-lg shadow-red-200' : 'border-transparent'
-                            }`}
-                            style={{
-                                animationDelay: `${index * 100}ms`,
-                                animation: 'fadeInUp 0.6s ease-out forwards'
-                            }}
-                        >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
-                            <div className="relative z-10">
-                                <div className={`w-14 h-14 mb-4 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-3xl transform group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-lg`}>
-                                    {card.icon}
-                                </div>
-                                <h3 className="font-black text-lg text-indigo-950 mb-1">{card.title}</h3>
-                                <p className="text-sm text-slate-600">{card.description}</p>
-                                {card.priority && (
-                                    <div className="mt-2 text-xs font-bold text-red-600 flex items-center gap-1">
-                                        ✨ Recommended
-                                    </div>
-                                )}
+                {/* SMART INSIGHTS - NEW! */}
+                <div className="space-y-6 animate-fade-in-up" style={{animationDelay: '300ms'}}>
+                    {/* Smart Insights Card */}
+                    {insights.length > 0 && (
+                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 border-2 border-amber-200 shadow-lg">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="text-2xl">💡</span>
+                                <h3 className="text-xl font-black text-amber-900">Smart Insights</h3>
                             </div>
-                        </button>
-                    ))}
-                </div>
-            </div>
+                            <div className="space-y-3">
+                                {insights.map((insight, index) => (
+                                    <div 
+                                        key={index}
+                                        className={`p-4 rounded-2xl border-2 ${
+                                            insight.type === 'urgent' ? 'bg-red-50 border-red-200' :
+                                            insight.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                                            insight.type === 'alert' ? 'bg-orange-50 border-orange-200' :
+                                            'bg-green-50 border-green-200'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-xl flex-shrink-0">{insight.icon}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-800 mb-2">{insight.text}</p>
+                                                {insight.action && (
+                                                    <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                                                        {insight.action} →
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-            {/* RECENT SUBSCRIPTIONS */}
-            {subscriptions.length > 0 && (
-                <div>
-                    <h2 className="text-2xl font-black mb-6 text-indigo-950">📊 Recent Subscriptions</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {subscriptions.slice(0, 6).map((sub, index) => {
-                            const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+                    {/* Top 5 Most Expensive - NEW! */}
+                    {topExpensive.length > 0 && (
+                        <div className="bg-white rounded-3xl p-6 border-2 border-slate-200 shadow-lg">
+                            <h3 className="text-lg font-black text-indigo-950 mb-4">💸 Top Expenses</h3>
+                            <div className="space-y-3">
+                                {topExpensive.map((sub, index) => {
+                                    const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+                                    return (
+                                        <div key={sub.id} className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-sm">
+                                                {index + 1}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-sm text-slate-800 truncate">{sub.name}</p>
+                                                <p className="text-xs text-slate-500">{sub.category}</p>
+                                            </div>
+                                            <p className="font-black text-indigo-900">${monthlyCost.toFixed(2)}</p>
+                                            </div>
+                                         );
+                                     })}
+                                 </div>
+                              </div>
+                            )}
+                      </div>
+                    </div>
+                    {/* UPCOMING BILLS TIMELINE - NEW! */}
+        {upcomingBills.length > 0 && (
+            <div className="mb-10 animate-fade-in-up" style={{animationDelay: '400ms'}}>
+                <h2 className="text-2xl font-black mb-6 text-indigo-950">📅 Upcoming Bills (Next 7 Days)</h2>
+                <div className="bg-white rounded-3xl p-8 border-2 border-slate-200 shadow-lg">
+                    <div className="space-y-4">
+                        {upcomingBills.map((bill, index) => {
+                            const monthlyCost = calculateMonthlyEquivalent(parseFloat(bill.cost), bill.billing_cycle);
                             return (
-                                <div 
-                                    key={sub.id}
-                                    className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 hover-lift border-2 border-transparent hover:border-cyan-200"
-                                    style={{
-                                        animationDelay: `${index * 100}ms`,
-                                        animation: 'fadeInUp 0.6s ease-out forwards'
-                                    }}
-                                >
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-black text-white shadow-lg">
-                                            {sub.name.charAt(0)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-base text-indigo-950 truncate">{sub.name}</h3>
-                                            <p className="text-sm text-slate-600">{sub.category}</p>
-                                        </div>
+                                <div key={bill.id} className="flex items-center gap-6 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
+                                    <div className="flex-shrink-0 w-16 text-center">
+                                        <p className="text-2xl font-black text-indigo-900">
+                                            {new Date(bill.next_billing_date).getDate()}
+                                        </p>
+                                        <p className="text-xs font-semibold text-slate-500 uppercase">
+                                            {new Date(bill.next_billing_date).toLocaleDateString('en-US', { month: 'short' })}
+                                        </p>
                                     </div>
-                                    <div className="flex items-baseline justify-between mb-2">
-                                        <span className="text-2xl font-black text-indigo-950">${monthlyCost.toFixed(2)}</span>
-                                        <span className="text-sm text-slate-500">/month</span>
+                                    <div className="h-12 w-px bg-slate-200"></div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-slate-800">{bill.name}</p>
+                                        <p className="text-sm text-slate-500">{getDayLabel(bill.daysUntil)}</p>
                                     </div>
-                                    {sub.next_billing_date && (
-                                        <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                                            <p className="text-xs font-semibold text-slate-600 flex items-center gap-2">
-                                                📅 Next: {formatDate(sub.next_billing_date)}
-                                            </p>
-                                        </div>
-                                    )}
+                                    <div className="text-right">
+                                        <p className="text-2xl font-black text-indigo-900">${monthlyCost.toFixed(2)}</p>
+                                        <p className="text-xs text-slate-500">{bill.billing_cycle}</p>
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
                 </div>
-            )}
+            </div>
+        )}
+
+        {/* QUICK ACTIONS */}
+        <div className="mb-10">
+            <h2 className="text-2xl font-black mb-6 text-indigo-950">⚡ Quick Actions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {actionCards.map((card, index) => (
+                    <button
+                        key={card.id}
+                        onClick={card.onClick}
+                        className={`relative overflow-hidden bg-white/80 backdrop-blur-sm rounded-3xl p-6 text-left hover-lift group border-2 ${
+                            card.priority ? 'border-red-300 shadow-lg shadow-red-200' : 'border-transparent'
+                        }`}
+                        style={{
+                            animationDelay: `${index * 100}ms`,
+                            animation: 'fadeInUp 0.6s ease-out forwards'
+                        }}
+                    >
+                        <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity`}></div>
+                        <div className="relative z-10">
+                            <div className={`w-14 h-14 mb-4 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-3xl transform group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-lg`}>
+                                {card.icon}
+                            </div>
+                            <h3 className="font-black text-lg text-indigo-950 mb-1">{card.title}</h3>
+                            <p className="text-sm text-slate-600">{card.description}</p>
+                            {card.priority && (
+                                <div className="mt-2 text-xs font-bold text-red-600 flex items-center gap-1">
+                                    ✨ Recommended
+                                </div>
+                            )}
+                        </div>
+                    </button>
+                ))}
+            </div>
         </div>
-    );
-};
 
-window.UltimateDashboard = EnhancedUltimateDashboard;
+        {/* RECENT ACTIVITY FEED - NEW! */}
+        {recentActivity.length > 0 && (
+            <div className="mb-10 animate-fade-in-up" style={{animationDelay: '500ms'}}>
+                <h2 className="text-2xl font-black mb-6 text-indigo-950">🔔 Recent Activity</h2>
+                <div className="bg-white rounded-3xl p-6 border-2 border-slate-200 shadow-lg">
+                    <div className="space-y-4">
+                        {recentActivity.map((activity, index) => (
+                            <div key={index} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
+                                <span className="text-3xl">{activity.icon}</span>
+                                <div className="flex-1">
+                                    <p className="font-bold text-slate-800">
+                                        {activity.type === 'renewed' && `${activity.name} renewed`}
+                                        {activity.type === 'added' && `Added ${activity.name}`}
+                                        {activity.type === 'trial_started' && `Started ${activity.name} trial`}
+                                    </p>
+                                    <p className="text-sm text-slate-500">{activity.time}</p>
+                                </div>
+                                {activity.amount > 0 && (
+                                    <p className="font-black text-lg text-red-600">-${activity.amount}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
 
-export default EnhancedUltimateDashboard;
+        {/* RECENT SUBSCRIPTIONS */}
+        {subscriptions.length > 0 && (
+            <div>
+                <h2 className="text-2xl font-black mb-6 text-indigo-950">📊 All Subscriptions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {subscriptions.slice(0, 6).map((sub, index) => {
+                        const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+                        return (
+                            <div 
+                                key={sub.id}
+                                className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 hover-lift border-2 border-transparent hover:border-cyan-200"
+                                style={{
+                                    animationDelay: `${index * 100}ms`,
+                                    animation: 'fadeInUp 0.6s ease-out forwards'
+                                }}
+                            >
+                                <div className="flex items-start gap-4 mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-black text-white shadow-lg">
+                                        {sub.name.charAt(0)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-base text-indigo-950 truncate">{sub.name}</h3>
+                                        <p className="text-sm text-slate-600">{sub.category}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-baseline justify-between mb-2">
+                                    <span className="text-2xl font-black text-indigo-950">${monthlyCost.toFixed(2)}</span>
+                                    <span className="text-sm text-slate-500">/month</span>
+                                </div>
+                                {sub.next_billing_date && (
+                                    <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                        <p className="text-xs font-semibold text-slate-600 flex items-center gap-2">
+                                            📅 Next: {formatDate(sub.next_billing_date)}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        )}
+    </div>
+)};
