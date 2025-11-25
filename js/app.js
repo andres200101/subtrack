@@ -286,39 +286,24 @@ function AurabilioApp() {
     };
 
     // Add Subscription Handler
-    // In app.js, update the handleAddSubscription function:
-const handleAddSubscription = async (subData) => {
-    if (!supabase || !user) return;
-    setLoading(true);
-    try {
-        // Calculate next billing date
-        const today = new Date();
-        const nextBilling = new Date(today);
-        if (subData.billing_cycle === 'monthly') {
-            nextBilling.setMonth(today.getMonth() + 1);
-        } else if (subData.billing_cycle === 'yearly') {
-            nextBilling.setFullYear(today.getFullYear() + 1);
-        } else if (subData.billing_cycle === 'weekly') {
-            nextBilling.setDate(today.getDate() + 7);
+    const handleAddSubscription = async (subData) => {
+        if (!supabase || !user) return;
+        setLoading(true);
+        try {
+            const newSub = {
+                ...subData,
+                user_id: user.id,
+                created_at: new Date().toISOString()
+            };
+            const { data, error } = await supabase.from('subscriptions').insert([newSub]);
+            if (!error) {
+                await loadSubscriptions();
+            }
+        } catch (err) {
+            console.error('Add subscription error:', err);
         }
-        
-        const newSub = {
-            ...subData,
-            user_id: user.id,
-            created_at: new Date().toISOString(),
-            next_billing_date: nextBilling.toISOString(),
-            last_used: new Date().toISOString() // Set to today initially
-        };
-        
-        const { data, error } = await supabase.from('subscriptions').insert([newSub]);
-        if (!error) {
-            await loadSubscriptions();
-        }
-    } catch (err) {
-        console.error('Add subscription error:', err);
-    }
-    setLoading(false);
-};
+        setLoading(false);
+    };
 
     // Edit Subscription Handler
     const handleEditSubscription = async (id, subData) => {
