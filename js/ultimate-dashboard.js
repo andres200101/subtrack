@@ -289,28 +289,23 @@ useEffect(() => {
         ctx.stroke();
 
         // ENHANCED: Hierarchical center text
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Currency symbol
-        ctx.fillStyle = '#4C34F5';
-        ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText('$', centerX - 35, centerY - 12);
-        
-        // Amount - larger and more prominent
-ctx.fillStyle = '#ffffff';
-ctx.font = '900 52px Inter, sans-serif';
-ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 8);
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+// Amount - larger and centered properly
+ctx.fillStyle = '#1e293b'; // Dark slate for contrast
+ctx.font = '900 56px Inter, sans-serif';
+ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 10);
 
 // Label
-ctx.font = '600 15px Inter, sans-serif';
-ctx.fillStyle = '#e2e8f0';
+ctx.font = '600 14px Inter, sans-serif';
+ctx.fillStyle = '#64748b';
 ctx.fillText('per month', centerX, centerY + 28);
 
 // Percentage indicator
-ctx.font = '700 13px Inter, sans-serif';
+ctx.font = '700 12px Inter, sans-serif';
 ctx.fillStyle = '#10b981';
-ctx.fillText('▲ 4.2%', centerX, centerY + 48);
+ctx.fillText('▲ 4.2%', centerX, centerY + 46);
     }
 }, [categoryData, displayedMonthly]);
 
@@ -327,9 +322,14 @@ useEffect(() => {
 
         ctx.clearRect(0, 0, width, height);
 
-        const maxValue = Math.max(...trendData.map(d => d.value)) * 1.08; // Add 8% headroom
-        const minValue = Math.min(...trendData.map(d => d.value)) * 0.92; // More bottom padding
-        const valueRange = maxValue - minValue;
+        const dataMax = Math.max(...trendData.map(d => d.value));
+const dataMin = Math.min(...trendData.map(d => d.value));
+
+// Add 10% padding above and below for better visual spacing
+const range = dataMax - dataMin;
+const maxValue = dataMax + (range * 0.1);
+const minValue = Math.max(0, dataMin - (range * 0.1)); // Don't go below 0
+const valueRange = maxValue - minValue;
 
         // ENHANCED: Draw grid with better visibility
         ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)'; // Increased opacity
@@ -438,16 +438,18 @@ useEffect(() => {
         });
 
         // ENHANCED: Draw Y-axis labels with better formatting
-        ctx.fillStyle = '#64748b';
-        ctx.font = '700 13px Inter, sans-serif'; // Bolder
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        
-        for (let i = 0; i <= 4; i++) {
-            const value = maxValue - (valueRange / 4) * i;
-            const y = padding + (chartHeight / 4) * i;
-            ctx.fillText(`$${Math.round(value).toLocaleString()}`, padding - 15, y);
-        }
+ctx.fillStyle = '#64748b';
+ctx.font = '600 12px Inter, sans-serif';
+ctx.textAlign = 'right';
+ctx.textBaseline = 'middle';
+
+for (let i = 0; i <= 4; i++) {
+    const value = maxValue - (valueRange / 4) * i;
+    const y = padding + (chartHeight / 4) * i;
+    // Round to nearest 100 for cleaner labels
+    const roundedValue = Math.round(value / 100) * 100;
+    ctx.fillText(`$${roundedValue.toLocaleString()}`, padding - 15, y);
+}
 
         // ENHANCED: Draw X-axis labels with current month highlighted
         ctx.font = '600 13px Inter, sans-serif';
@@ -475,6 +477,34 @@ useEffect(() => {
     }
 });
     }
+}, [trendData]);
+// Add hover interaction for trend chart
+useEffect(() => {
+    if (!trendChartRef.current || trendData.length === 0) return;
+    
+    const canvas = trendChartRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    const handleMouseMove = (e) => {
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        const padding = 70;
+        const chartWidth = canvas.width - padding * 2;
+        const pointWidth = chartWidth / (trendData.length - 1);
+        
+        // Find closest data point
+        const index = Math.round((mouseX - padding) / pointWidth);
+        if (index >= 0 && index < trendData.length) {
+            canvas.style.cursor = 'pointer';
+            // You can add a tooltip div here
+        } else {
+            canvas.style.cursor = 'default';
+        }
+    };
+    
+    canvas.addEventListener('mousemove', handleMouseMove);
+    return () => canvas.removeEventListener('mousemove', handleMouseMove);
 }, [trendData]);
 
         // Quick action cards
