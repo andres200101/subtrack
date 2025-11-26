@@ -21,6 +21,39 @@
         getDaysRemaining = (date) => Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24)),
         formatDate = (date) => new Date(date).toLocaleDateString()
     }) => {
+        // ADD THIS NUMBER FORMATTING UTILITY HERE
+    const formatCurrency = (value, compact = false) => {
+        const num = parseFloat(value);
+        
+        if (compact) {
+            if (num >= 1000000) {
+                return `$${(num / 1000000).toFixed(1)}M`;
+            }
+            if (num >= 10000) {
+                return `$${(num / 1000).toFixed(1)}K`;
+            }
+        }
+        
+        return `$${num.toLocaleString('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        })}`;
+    };
+    
+    const formatCompactNumber = (value) => {
+        const num = parseFloat(value);
+        
+        if (num >= 1000000000) {
+            return `${(num / 1000000000).toFixed(1)}B`;
+        }
+        if (num >= 1000000) {
+            return `${(num / 1000000).toFixed(1)}M`;
+        }
+        if (num >= 1000) {
+            return `${(num / 1000).toFixed(1)}K`;
+        }
+        return num.toFixed(0);
+    };
         const [displayedMonthly, setDisplayedMonthly] = useState(0);
         const chartRef = useRef(null);
         const trendChartRef = useRef(null);
@@ -292,10 +325,16 @@ useEffect(() => {
 ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
 
-// Amount - larger and centered properly
-ctx.fillStyle = '#1e293b'; // Dark slate for contrast
-ctx.font = '900 56px Inter, sans-serif';
-ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 10);
+// Amount - larger and centered properly with dynamic sizing
+const displayValue = displayedMonthly >= 100000 
+    ? formatCompactNumber(displayedMonthly) 
+    : displayedMonthly.toFixed(0);
+
+const fontSize = displayedMonthly >= 1000000 ? 48 : displayedMonthly >= 100000 ? 52 : 56;
+
+ctx.fillStyle = '#1e293b';
+ctx.font = `900 ${fontSize}px Inter, sans-serif`;
+ctx.fillText(`$${displayValue}`, centerX, centerY - 10);
 
 // Label
 ctx.font = '600 14px Inter, sans-serif';
@@ -381,11 +420,14 @@ const valueRange = maxValue - minValue;
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Budget label
-            ctx.fillStyle = '#ef4444';
-            ctx.font = '600 12px Inter, sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Budget: $${monthlyBudget.toFixed(0)}`, padding + 10, budgetY - 8);
+            // Budget label with compact formatting
+ctx.fillStyle = '#ef4444';
+ctx.font = '600 12px Inter, sans-serif';
+ctx.textAlign = 'left';
+const budgetDisplay = monthlyBudget >= 10000 
+    ? `Budget: $${(monthlyBudget / 1000).toFixed(1)}K`
+    : `Budget: $${monthlyBudget.toFixed(0)}`;
+ctx.fillText(budgetDisplay, padding + 10, budgetY - 8);
         }
 
         // ENHANCED: Draw line with gradient stroke
@@ -446,9 +488,22 @@ ctx.textBaseline = 'middle';
 for (let i = 0; i <= 4; i++) {
     const value = maxValue - (valueRange / 4) * i;
     const y = padding + (chartHeight / 4) * i;
-    // Round to nearest 100 for cleaner labels
-    const roundedValue = Math.round(value / 100) * 100;
-    ctx.fillText(`$${roundedValue.toLocaleString()}`, padding - 15, y);
+    
+    // Smart rounding based on magnitude
+    let displayValue;
+    if (value >= 1000000) {
+        displayValue = `$${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 100000) {
+        displayValue = `$${(value / 1000).toFixed(0)}K`;
+    } else if (value >= 10000) {
+        displayValue = `$${(value / 1000).toFixed(1)}K`;
+    } else {
+        const roundTo = value >= 1000 ? 100 : 10;
+        const rounded = Math.round(value / roundTo) * roundTo;
+        displayValue = `$${rounded.toLocaleString()}`;
+    }
+    
+    ctx.fillText(displayValue, padding - 15, y);
 }
 
         // ENHANCED: Draw X-axis labels with current month highlighted
@@ -757,7 +812,7 @@ useEffect(() => {
         return (
             <div 
                 key={category}
-                className="group relative bg-white/15 backdrop-blur-lg p-5 rounded-2xl hover-lift border border-white/30 transition-all duration-300"
+                className="group relative bg-white/20 backdrop-blur-lg p-5 rounded-2xl hover-lift border border-white/40 transition-all duration-300 shadow-lg"
                 style={{
                     animationDelay: `${index * 100}ms`,
                     animation: 'fadeInUp 0.6s ease-out forwards'
@@ -801,15 +856,14 @@ useEffect(() => {
                             </div>
                         </div>
                     </div>
-                    
                     <div className="text-right">
     <p className="font-black text-2xl text-white group-hover:text-cyan-300 transition-colors">
-        ${amount.toFixed(2)}
+        {formatCurrency(amount, amount >= 10000)}
     </p>
-    <p className="text-xs text-cyan-300/70 font-medium mt-1">
-        ${(amount / 30).toFixed(2)}/day
+    <p className="text-xs text-cyan-200/90 font-semibold mt-1">
+        {formatCurrency(amount / 30, (amount / 30) >= 1000)}/day
     </p>
-</div>
+</div>               
                 </div>
             </div>
         );
@@ -880,7 +934,9 @@ useEffect(() => {
                                                     <p className="font-bold text-sm text-slate-800 truncate">{sub.name}</p>
                                                     <p className="text-xs text-slate-500">{sub.category}</p>
                                                 </div>
-                                                <p className="font-black text-indigo-900">${monthlyCost.toFixed(2)}</p>
+                                                <p className="font-black text-indigo-900 text-sm">
+    {formatCurrency(monthlyCost, monthlyCost >= 1000)}
+</p>
                                             </div>
                                         );
                                     })}
