@@ -829,11 +829,7 @@ useEffect(() => {
     <div className="text-xs text-cyan-200/60 font-medium">
         K = Thousand • M = Million • B = Billion • T = Trillion
     </div>
-</div>
-                             
-                            
-                            <h2 className="text-2xl font-black mb-8 text-white relative z-10">💰 Category Breakdown</h2>
-
+</div>                             
 {Object.keys(categoryData).length > 0 ? (
     <div className="flex flex-col lg:flex-row items-center gap-8 relative z-10">
         <div className="relative">
