@@ -139,6 +139,56 @@ function AurabilioApp() {
     const [loading, setLoading] = useState(false);
     const [currentView, setCurrentView] = useState('dashboard');
     const [monthlyBudget, setMonthlyBudget] = useState(null);
+    // In your parent component or main app
+const [historicalData, setHistoricalData] = useState([]);
+
+// When subscriptions change, record the snapshot
+useEffect(() => {
+    const today = new Date();
+    const currentMonthKey = `${today.getFullYear()}-${today.getMonth()}`;
+    
+    // Calculate current total
+    const currentTotal = subscriptions.reduce((sum, sub) => {
+        return sum + calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+    }, 0);
+    
+    // Check if we already have data for this month
+    const existingIndex = historicalData.findIndex(
+        h => h.monthKey === currentMonthKey
+    );
+    
+    if (existingIndex >= 0) {
+        // Update existing month
+        const updated = [...historicalData];
+        updated[existingIndex] = {
+            monthKey: currentMonthKey,
+            total: currentTotal,
+            timestamp: Date.now()
+        };
+        setHistoricalData(updated);
+    } else {
+        // Add new month
+        setHistoricalData([
+            ...historicalData,
+            {
+                monthKey: currentMonthKey,
+                total: currentTotal,
+                timestamp: Date.now()
+            }
+        ]);
+    }
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('spending-history', JSON.stringify(historicalData));
+}, [subscriptions]);
+
+// Load historical data on mount
+useEffect(() => {
+    const saved = localStorage.getItem('spending-history');
+    if (saved) {
+        setHistoricalData(JSON.parse(saved));
+    }
+}, []);
 
     // Initialize Supabase on mount
     useEffect(() => {

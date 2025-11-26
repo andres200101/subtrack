@@ -11,6 +11,7 @@
         totalYearly = 0,
         monthlyBudget,
         cancelledSubscriptions = [],
+        historicalData = [],
         onNavigate,
         onAddNew,
         onScanEmail,
@@ -115,22 +116,45 @@ const categoryColors = {
     'Other': { color: '#6B7280', icon: '📦', light: '#9CA3AF' } // Gray
 };
 
-        // Generate mock 12-month trend data
-        const generateTrendData = () => {
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const currentMonth = new Date().getMonth();
-            const data = [];
-            
-            for (let i = 11; i >= 0; i--) {
-                const monthIndex = (currentMonth - i + 12) % 12;
-                const baseValue = totalMonthly * (0.7 + Math.random() * 0.4);
-                data.push({
-                    month: months[monthIndex],
-                    value: i === 0 ? totalMonthly : baseValue
-                });
-            }
-            return data;
-        };
+        // Generate trend data - use real historical data if available, otherwise create baseline
+const generateTrendData = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    
+    // If we have real historical data, use it
+    if (historicalData && historicalData.length > 0) {
+        return historicalData.map((data, index) => ({
+            month: months[(currentMonth - (historicalData.length - 1 - index) + 12) % 12],
+            value: data.total
+        }));
+    }
+    
+    // For first-time users, create a simple baseline showing current month only
+    // This prevents fake percentage changes
+    const data = [];
+    
+    // Show last 12 months, but only current month has real data
+    for (let i = 11; i >= 0; i--) {
+        const monthIndex = (currentMonth - i + 12) % 12;
+        
+        if (i === 0) {
+            // Current month - real data
+            data.push({
+                month: months[monthIndex],
+                value: totalMonthly
+            });
+        } else {
+            // Past months - use current value as baseline (no fake variation)
+            // This will trigger "isFirstMonth" logic
+            data.push({
+                month: months[monthIndex],
+                value: totalMonthly
+            });
+        }
+    }
+    
+    return data;
+};
 
         const trendData = generateTrendData();
 
@@ -176,28 +200,63 @@ const calculateMonthlyChange = () => {
         };
     }
     
-    // Calculate real month-over-month change
-const dollarChange = currentMonth - previousMonth;
-const percentChange = (dollarChange / previousMonth) * 100;
-
-// Determine direction based on spending change
-// UP = spending increased (BAD) → RED
-// DOWN = spending decreased (GOOD) → GREEN
-let direction;
-if (percentChange > 0.5) {
-    direction = 'up';    // Spending MORE than last month (bad)
-} else if (percentChange < -0.5) {
-    direction = 'down';  // Spending LESS than last month (good)
-} else {
-    direction = 'stable'; // No significant change
-}
-
-return {
-    percent: Math.abs(percentChange).toFixed(1),
-    direction: direction,
-    dollarChange: dollarChange,
-    isFirstMonth: false
-};
+// Calculate month-over-month change with better first-time detection
+const calculateMonthlyChange = () => {
+    // Check if we have real historical data
+    const hasRealHistory = historicalData && historicalData.length >= 2;
+    
+    if (!hasRealHistory) {
+        // No historical data - definitely first month
+        return { 
+            percent: 0, 
+            direction: 'new', 
+            dollarChange: 0,
+            isFirstMonth: true 
+        };
+    }
+    
+    // Get last two months from real historical data
+    const currentMonth = historicalData[historicalData.length - 1].total;
+    const previousMonth = historicalData[historicalData.length - 2].total;
+    
+    // Check for zero values
+    if (previousMonth === 0 || currentMonth === 0) {
+        return { 
+            percent: 0, 
+            direction: 'new', 
+            dollarChange: 0,
+            isFirstMonth: true 
+        };
+    }
+    
+    // Calculate real change
+    const dollarChange = currentMonth - previousMonth;
+    const percentChange = (dollarChange / previousMonth) * 100;
+    
+    // Determine direction
+    let direction;
+    if (percentChange > 0.5) {
+        direction = 'up';    // Spending MORE (bad)
+    } else if (percentChange < -0.5) {
+        direction = 'down';  // Spending LESS (good)
+    } else {
+        direction = 'stable';
+    }
+    
+    console.log('📊 Real Monthly Change:', {
+        previous: previousMonth.toFixed(2),
+        current: currentMonth.toFixed(2),
+        change: dollarChange.toFixed(2),
+        percent: percentChange.toFixed(1) + '%',
+        direction
+    });
+    
+    return {
+        percent: Math.abs(percentChange).toFixed(1),
+        direction: direction,
+        dollarChange: dollarChange,
+        isFirstMonth: false
+    };
 };
 
 const monthlyChange = calculateMonthlyChange();
@@ -1316,4 +1375,4 @@ useEffect(() => {
 
     // Expose to window
     window.UltimateDashboard = EnhancedUltimateDashboard;
-})();
+}})();
