@@ -23,37 +23,46 @@
     }) => {
         // ADD THIS NUMBER FORMATTING UTILITY HERE
     const formatCurrency = (value, compact = false) => {
-        const num = parseFloat(value);
-        
-        if (compact) {
-            if (num >= 1000000) {
-                return `$${(num / 1000000).toFixed(1)}M`;
-            }
-            if (num >= 10000) {
-                return `$${(num / 1000).toFixed(1)}K`;
-            }
-        }
-        
-        return `$${num.toLocaleString('en-US', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-        })}`;
-    };
+    const num = parseFloat(value);
     
-    const formatCompactNumber = (value) => {
-        const num = parseFloat(value);
-        
+    if (compact) {
+        if (num >= 1000000000000) {
+            return `$${(num / 1000000000000).toFixed(1)}T`;
+        }
         if (num >= 1000000000) {
-            return `${(num / 1000000000).toFixed(1)}B`;
+            return `$${(num / 1000000000).toFixed(1)}B`;
         }
         if (num >= 1000000) {
-            return `${(num / 1000000).toFixed(1)}M`;
+            return `$${(num / 1000000).toFixed(1)}M`;
         }
-        if (num >= 1000) {
-            return `${(num / 1000).toFixed(1)}K`;
+        if (num >= 10000) {
+            return `$${(num / 1000).toFixed(1)}K`;
         }
-        return num.toFixed(0);
-    };
+    }
+    
+    return `$${num.toLocaleString('en-US', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    })}`;
+};
+
+const formatCompactNumber = (value) => {
+    const num = parseFloat(value);
+    
+    if (num >= 1000000000000) {
+        return `${(num / 1000000000000).toFixed(1)}T`;
+    }
+    if (num >= 1000000000) {
+        return `${(num / 1000000000).toFixed(1)}B`;
+    }
+    if (num >= 1000000) {
+        return `${(num / 1000000).toFixed(1)}M`;
+    }
+    if (num >= 1000) {
+        return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toFixed(0);
+};
         const [displayedMonthly, setDisplayedMonthly] = useState(0);
         const chartRef = useRef(null);
         const trendChartRef = useRef(null);
@@ -326,15 +335,23 @@ ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
 
 // Amount - larger and centered properly with dynamic sizing
+// Amount - larger and centered properly with dynamic sizing
 const displayValue = displayedMonthly >= 100000 
     ? formatCompactNumber(displayedMonthly) 
     : displayedMonthly.toFixed(0);
 
-const fontSize = displayedMonthly >= 1000000 ? 48 : displayedMonthly >= 100000 ? 52 : 56;
+// Dynamic font sizing based on value magnitude
+const fontSize = displayedMonthly >= 1000000000000 ? 40 :  // Trillion
+                 displayedMonthly >= 1000000000 ? 42 :     // Billion
+                 displayedMonthly >= 1000000 ? 44 :        // Million
+                 displayedMonthly >= 100000 ? 48 :         // 100K+
+                 displayedMonthly >= 10000 ? 52 : 56;      // 10K+
 
 ctx.fillStyle = '#1e293b';
 ctx.font = `900 ${fontSize}px Inter, sans-serif`;
-ctx.fillText(`$${displayValue}`, centerX, centerY - 10);
+
+// Center the text perfectly
+ctx.fillText(`$${displayValue}`, centerX, centerY - 8);
 
 // Label
 ctx.font = '600 14px Inter, sans-serif';
@@ -421,12 +438,24 @@ const valueRange = maxValue - minValue;
             ctx.setLineDash([]);
             
             // Budget label with compact formatting
+// Budget label with compact formatting (B/T support)
 ctx.fillStyle = '#ef4444';
 ctx.font = '600 12px Inter, sans-serif';
 ctx.textAlign = 'left';
-const budgetDisplay = monthlyBudget >= 10000 
-    ? `Budget: $${(monthlyBudget / 1000).toFixed(1)}K`
-    : `Budget: $${monthlyBudget.toFixed(0)}`;
+
+let budgetDisplay;
+if (monthlyBudget >= 1000000000000) {
+    budgetDisplay = `Budget: $${(monthlyBudget / 1000000000000).toFixed(1)}T`;
+} else if (monthlyBudget >= 1000000000) {
+    budgetDisplay = `Budget: $${(monthlyBudget / 1000000000).toFixed(1)}B`;
+} else if (monthlyBudget >= 1000000) {
+    budgetDisplay = `Budget: $${(monthlyBudget / 1000000).toFixed(1)}M`;
+} else if (monthlyBudget >= 10000) {
+    budgetDisplay = `Budget: $${(monthlyBudget / 1000).toFixed(1)}K`;
+} else {
+    budgetDisplay = `Budget: $${monthlyBudget.toFixed(0)}`;
+}
+
 ctx.fillText(budgetDisplay, padding + 10, budgetY - 8);
         }
 
@@ -489,18 +518,18 @@ for (let i = 0; i <= 4; i++) {
     const value = maxValue - (valueRange / 4) * i;
     const y = padding + (chartHeight / 4) * i;
     
-    // Smart rounding based on magnitude
+    // Consistent formatting with B and T support
     let displayValue;
-    if (value >= 1000000) {
+    if (value >= 1000000000000) {
+        displayValue = `$${(value / 1000000000000).toFixed(1)}T`;
+    } else if (value >= 1000000000) {
+        displayValue = `$${(value / 1000000000).toFixed(1)}B`;
+    } else if (value >= 1000000) {
         displayValue = `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 100000) {
-        displayValue = `$${(value / 1000).toFixed(0)}K`;
-    } else if (value >= 10000) {
+    } else if (value >= 1000) {
         displayValue = `$${(value / 1000).toFixed(1)}K`;
     } else {
-        const roundTo = value >= 1000 ? 100 : 10;
-        const rounded = Math.round(value / roundTo) * roundTo;
-        displayValue = `$${rounded.toLocaleString()}`;
+        displayValue = `$${Math.round(value)}`;
     }
     
     ctx.fillText(displayValue, padding - 15, y);
@@ -612,6 +641,10 @@ useEffect(() => {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes expandWidth {
+        from { width: 0; }
+        to { width: var(--final-width); }
+    }   
     
     /* ENHANCED: Better card spacing */
     .hover-lift {
@@ -791,6 +824,13 @@ useEffect(() => {
                          <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#1e3a8a] shadow-2xl">
                              <div className="absolute top-0 right-0 w-96 h-96 bg-violet-500 opacity-10 rounded-full blur-3xl"></div>
                              <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 opacity-10 rounded-full blur-3xl"></div>
+                        <div className="flex items-center justify-between mb-8 relative z-10">
+    <h2 className="text-2xl font-black text-white">💰 Category Breakdown</h2>
+    <div className="text-xs text-cyan-200/60 font-medium">
+        K = Thousand • M = Million • B = Billion • T = Trillion
+    </div>
+</div>
+                             
                             
                             <h2 className="text-2xl font-black mb-8 text-white relative z-10">💰 Category Breakdown</h2>
 
@@ -844,11 +884,13 @@ useEffect(() => {
                             <div className="flex items-center gap-2">
                                 <div className="h-2.5 w-28 bg-white/25 rounded-full overflow-hidden shadow-inner">
     <div 
-        className="h-full rounded-full transition-all duration-1000"
+        className="h-full rounded-full transition-all duration-1000 ease-out"
         style={{
             width: `${percentage}%`,
-            background: `linear-gradient(90deg, ${catColor?.color}, ${catColor?.light})`,
-            boxShadow: `0 0 12px ${catColor?.color}80, inset 0 1px 2px rgba(255,255,255,0.3)`
+            background: `linear-gradient(90deg, ${catColor?.color}ee, ${catColor?.light})`,
+            boxShadow: `0 0 12px ${catColor?.color}80, inset 0 1px 2px rgba(255,255,255,0.3)`,
+            animation: 'expandWidth 0.8s ease-out forwards',
+            animationDelay: `${index * 150}ms`
         }}
     />
 </div>
@@ -857,13 +899,13 @@ useEffect(() => {
                         </div>
                     </div>
                     <div className="text-right">
-    <p className="font-black text-2xl text-white group-hover:text-cyan-300 transition-colors">
+    <p className="font-black text-xl text-white group-hover:text-cyan-300 transition-colors drop-shadow-sm">
         {formatCurrency(amount, amount >= 10000)}
     </p>
-    <p className="text-xs text-cyan-200/90 font-semibold mt-1">
+    <p className="text-[11px] text-cyan-200/80 font-medium mt-0.5">
         {formatCurrency(amount / 30, (amount / 30) >= 1000)}/day
     </p>
-</div>               
+</div>              
                 </div>
             </div>
         );
