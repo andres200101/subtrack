@@ -219,8 +219,8 @@ useEffect(() => {
         const ctx = canvas.getContext('2d');
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const outerRadius = 140;
-        const innerRadius = 90; // Thicker donut
+        const outerRadius = 135;
+        const innerRadius = 100; // Thicker donut
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -297,19 +297,20 @@ useEffect(() => {
         ctx.font = '600 20px Inter, sans-serif';
         ctx.fillText('$', centerX - 35, centerY - 12);
         
-        // Amount
-        ctx.font = '900 42px Inter, sans-serif';
-        ctx.fillText(displayedMonthly.toFixed(0), centerX + 15, centerY - 12);
-        
-        // Label
-        ctx.font = '600 14px Inter, sans-serif';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText('per month', centerX, centerY + 22);
-        
-        // Subtle percentage indicator
-        ctx.font = '700 11px Inter, sans-serif';
-        ctx.fillStyle = '#10b981';
-        ctx.fillText('â–² 4.2%', centerX, centerY + 40);
+        // Amount - larger and more prominent
+ctx.fillStyle = '#ffffff';
+ctx.font = '900 52px Inter, sans-serif';
+ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 8);
+
+// Label
+ctx.font = '600 15px Inter, sans-serif';
+ctx.fillStyle = '#e2e8f0';
+ctx.fillText('per month', centerX, centerY + 28);
+
+// Percentage indicator
+ctx.font = '700 13px Inter, sans-serif';
+ctx.fillStyle = '#10b981';
+ctx.fillText('▲ 4.2%', centerX, centerY + 48);
     }
 }, [categoryData, displayedMonthly]);
 
@@ -326,8 +327,8 @@ useEffect(() => {
 
         ctx.clearRect(0, 0, width, height);
 
-        const minValue = Math.min(...trendData.map(d => d.value));
-        const maxValue = Math.max(...trendData.map(d => d.value)) * 1.05; // Add 5% padding
+        const maxValue = Math.max(...trendData.map(d => d.value)) * 1.08; // Add 8% headroom
+        const minValue = Math.min(...trendData.map(d => d.value)) * 0.92; // More bottom padding
         const valueRange = maxValue - minValue;
 
         // ENHANCED: Draw grid with better visibility
@@ -367,11 +368,32 @@ useEffect(() => {
         ctx.fillStyle = gradient;
         ctx.fill();
 
+        // Draw budget reference line (if set)
+        if (monthlyBudget) {
+            const budgetY = padding + chartHeight - ((monthlyBudget - minValue) / valueRange) * chartHeight;
+            
+            ctx.setLineDash([8, 4]);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, budgetY);
+            ctx.lineTo(width - padding, budgetY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Budget label
+            ctx.fillStyle = '#ef4444';
+            ctx.font = '600 12px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Budget: $${monthlyBudget.toFixed(0)}`, padding + 10, budgetY - 8);
+        }
+
         // ENHANCED: Draw line with gradient stroke
         const lineGradient = ctx.createLinearGradient(padding, 0, width - padding, 0);
-        lineGradient.addColorStop(0, '#4C34F5'); // Primary
-        lineGradient.addColorStop(0.5, '#6B54FF'); // Primary-light
-        lineGradient.addColorStop(1, '#00B6C9'); // Secondary
+        lineGradient.addColorStop(0, '#6366f1');    // Indigo
+        lineGradient.addColorStop(0.6, '#8b5cf6');  // Purple
+        lineGradient.addColorStop(0.85, '#06b6d4'); // Cyan start
+        lineGradient.addColorStop(1, '#0891b2');    // Cyan end
         
         ctx.beginPath();
         ctx.strokeStyle = lineGradient;
@@ -681,7 +703,7 @@ useEffect(() => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
                     {/* LEFT: Category Breakdown Chart */}
                      <div className="lg:col-span-2 animate-fade-in-up" style={{animationDelay: '200ms'}}>
-                         <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-indigo-950 via-indigo-900 to-blue-900 shadow-2xl">
+                         <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#1e3a8a] shadow-2xl">
                              <div className="absolute top-0 right-0 w-96 h-96 bg-violet-500 opacity-10 rounded-full blur-3xl"></div>
                              <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 opacity-10 rounded-full blur-3xl"></div>
                             
@@ -735,28 +757,29 @@ useEffect(() => {
                         <div>
                             <span className="font-bold text-white text-lg block mb-1">{category}</span>
                             <div className="flex items-center gap-2">
-                                <div className="h-2 w-24 bg-white/20 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full rounded-full transition-all duration-1000"
-                                        style={{
-                                            width: `${percentage}%`,
-                                            background: catColor?.color
-                                        }}
-                                    />
-                                </div>
+                                <div className="h-2.5 w-28 bg-white/25 rounded-full overflow-hidden shadow-inner">
+    <div 
+        className="h-full rounded-full transition-all duration-1000"
+        style={{
+            width: `${percentage}%`,
+            background: `linear-gradient(90deg, ${catColor?.color}, ${catColor?.light})`,
+            boxShadow: `0 0 12px ${catColor?.color}80, inset 0 1px 2px rgba(255,255,255,0.3)`
+        }}
+    />
+</div>
                                 <span className="text-xs text-cyan-300 font-semibold">{percentage}%</span>
                             </div>
                         </div>
                     </div>
                     
                     <div className="text-right">
-                        <p className="font-black text-2xl text-white group-hover:text-cyan-300 transition-colors">
-                            ${amount.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-cyan-200 font-semibold mt-1">
-                            ${(amount / 30).toFixed(2)}/day
-                        </p>
-                    </div>
+    <p className="font-black text-2xl text-white group-hover:text-cyan-300 transition-colors">
+        ${amount.toFixed(2)}
+    </p>
+    <p className="text-xs text-cyan-300/70 font-medium mt-1">
+        ${(amount / 30).toFixed(2)}/day
+    </p>
+</div>
                 </div>
             </div>
         );
