@@ -177,15 +177,27 @@ const calculateMonthlyChange = () => {
     }
     
     // Calculate real month-over-month change
-    const dollarChange = currentMonth - previousMonth;
-    const percentChange = (dollarChange / previousMonth) * 100;
-    
-    return {
-        percent: Math.abs(percentChange).toFixed(1),
-        direction: percentChange > 0.5 ? 'up' : percentChange < -0.5 ? 'down' : 'stable',
-        dollarChange: dollarChange,
-        isFirstMonth: false
-    };
+const dollarChange = currentMonth - previousMonth;
+const percentChange = (dollarChange / previousMonth) * 100;
+
+// Determine direction based on spending change
+// UP = spending increased (BAD) → RED
+// DOWN = spending decreased (GOOD) → GREEN
+let direction;
+if (percentChange > 0.5) {
+    direction = 'up';    // Spending MORE than last month (bad)
+} else if (percentChange < -0.5) {
+    direction = 'down';  // Spending LESS than last month (good)
+} else {
+    direction = 'stable'; // No significant change
+}
+
+return {
+    percent: Math.abs(percentChange).toFixed(1),
+    direction: direction,
+    dollarChange: dollarChange,
+    isFirstMonth: false
+};
 };
 
 const monthlyChange = calculateMonthlyChange();
