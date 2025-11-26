@@ -140,10 +140,25 @@ function AurabilioApp() {
     const [currentView, setCurrentView] = useState('dashboard');
     const [monthlyBudget, setMonthlyBudget] = useState(null);
     // In your parent component or main app
+// In your parent component or main app
 const [historicalData, setHistoricalData] = useState([]);
+
+// Helper function for monthly calculation
+const calculateMonthlyEquivalent = (cost, cycle) => {
+    const amount = parseFloat(cost);
+    switch (cycle?.toLowerCase()) {
+        case 'monthly': return amount;
+        case 'yearly': return amount / 12;
+        case 'quarterly': return amount / 3;
+        case 'weekly': return amount * 4.33;
+        default: return amount;
+    }
+};
 
 // When subscriptions change, record the snapshot
 useEffect(() => {
+    if (subscriptions.length === 0) return; // Don't record empty state
+    
     const today = new Date();
     const currentMonthKey = `${today.getFullYear()}-${today.getMonth()}`;
     
@@ -166,27 +181,33 @@ useEffect(() => {
             timestamp: Date.now()
         };
         setHistoricalData(updated);
+        localStorage.setItem('spending-history', JSON.stringify(updated));
     } else {
         // Add new month
-        setHistoricalData([
+        const newHistory = [
             ...historicalData,
             {
                 monthKey: currentMonthKey,
                 total: currentTotal,
                 timestamp: Date.now()
             }
-        ]);
+        ];
+        setHistoricalData(newHistory);
+        localStorage.setItem('spending-history', JSON.stringify(newHistory));
     }
-    
-    // Save to localStorage for persistence
-    localStorage.setItem('spending-history', JSON.stringify(historicalData));
 }, [subscriptions]);
 
 // Load historical data on mount
 useEffect(() => {
     const saved = localStorage.getItem('spending-history');
     if (saved) {
-        setHistoricalData(JSON.parse(saved));
+        try {
+            const parsed = JSON.parse(saved);
+            setHistoricalData(Array.isArray(parsed) ? parsed : []);
+        } catch (e) {
+            console.error('Failed to load history:', e);
+            setHistoricalData([]);
+        }
     }
 }, []);
 
@@ -408,6 +429,7 @@ useEffect(() => {
                         totalYearly={totalYearly}
                         monthlyBudget={monthlyBudget}
                         cancelledSubscriptions={[]}
+                        historicalData={historicalData}
                         onNavigate={setCurrentView}
                         onAddNew={() => setCurrentView('subscriptions')}
                         onScanEmail={() => console.log('Open email scanner')}
