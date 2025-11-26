@@ -134,6 +134,62 @@ const categoryColors = {
 
         const trendData = generateTrendData();
 
+// Calculate month-over-month change with first-time user handling
+const calculateMonthlyChange = () => {
+    // Check if we have enough historical data
+    if (trendData.length < 2) {
+        return { 
+            percent: 0, 
+            direction: 'new', 
+            dollarChange: 0,
+            isFirstMonth: true 
+        };
+    }
+    
+    const currentMonth = trendData[trendData.length - 1].value;
+    const previousMonth = trendData[trendData.length - 2].value;
+    
+    // Check if previous month had no spending (also indicates new user)
+    if (previousMonth === 0 || currentMonth === 0) {
+        return { 
+            percent: 0, 
+            direction: 'new', 
+            dollarChange: 0,
+            isFirstMonth: true 
+        };
+    }
+    
+    // Check if data is mock/generated (all values are similar with random variance)
+    // This detects the mock data pattern from generateTrendData
+    const allValuesAreSimilar = trendData.every(d => {
+        const variance = Math.abs(d.value - totalMonthly) / totalMonthly;
+        return variance < 0.4; // Within 40% of current value
+    });
+    
+    if (allValuesAreSimilar && subscriptions.length <= 3) {
+        // Likely a new user with mock data
+        return { 
+            percent: 0, 
+            direction: 'new', 
+            dollarChange: 0,
+            isFirstMonth: true 
+        };
+    }
+    
+    // Calculate real month-over-month change
+    const dollarChange = currentMonth - previousMonth;
+    const percentChange = (dollarChange / previousMonth) * 100;
+    
+    return {
+        percent: Math.abs(percentChange).toFixed(1),
+        direction: percentChange > 0.5 ? 'up' : percentChange < -0.5 ? 'down' : 'stable',
+        dollarChange: dollarChange,
+        isFirstMonth: false
+    };
+};
+
+const monthlyChange = calculateMonthlyChange();
+
         // Get upcoming bills (next 7 days)
         const getUpcomingBills = () => {
             const today = new Date();
@@ -212,6 +268,16 @@ const spendingPace = expectedSpend > 0 ? ((totalMonthly / expectedSpend) * 100).
 // Smart insights
 const generateInsights = () => {
             const insights = [];
+            // First-time user insight
+    if (monthlyChange.isFirstMonth) {
+        insights.push({
+            icon: '🎯',
+            text: `This is your first month! Track for 30 days to see spending trends and get personalized insights`,
+            type: 'info',
+            action: null
+        });
+    }
+
             
             // Savings achievement
             if (cancelledSubscriptions.length > 0) {
@@ -259,8 +325,16 @@ useEffect(() => {
     if (chartRef.current && Object.keys(categoryData).length > 0) {
         const canvas = chartRef.current;
         const ctx = canvas.getContext('2d');
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+        
+        // Better rendering quality
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
         const outerRadius = 135;
         const innerRadius = 100; // Thicker donut
 
@@ -351,28 +425,76 @@ ctx.fillStyle = '#1e293b';
 ctx.font = `900 ${fontSize}px Inter, sans-serif`;
 
 // Center the text perfectly
-ctx.fillText(`$${displayValue}`, centerX, centerY - 8);
+ctx.fillText(`$${displayValue}`, centerX, centerY - 5);
 
 // Label
 ctx.font = '600 14px Inter, sans-serif';
 ctx.fillStyle = '#64748b';
-ctx.fillText('per month', centerX, centerY + 28);
+ctx.fillText('per month', centerX, centerY + 22);
 
-// Percentage indicator
-ctx.font = '700 12px Inter, sans-serif';
-ctx.fillStyle = '#10b981';
-ctx.fillText('▲ 4.2%', centerX, centerY + 46);
+// Percentage indicator - FULLY DYNAMIC WITH FIRST-TIME USER HANDLING
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+if (monthlyChange.isFirstMonth) {
+    // First month - show welcoming message
+    ctx.font = '700 12px Inter, sans-serif';
+    ctx.fillStyle = '#6366f1'; // Indigo for neutral/informational
+    ctx.fillText('● Your baseline', centerX, centerY + 40);
+} else if (monthlyChange.direction === 'stable') {
+    // No significant change
+    ctx.font = '700 12px Inter, sans-serif';
+    ctx.fillStyle = '#64748b'; // Gray
+    ctx.fillText('— No change', centerX, centerY + 40);
+} else {
+    // Show percentage change
+    ctx.font = '700 12px Inter, sans-serif';
+    
+    // Red for increase (spending more = bad), Green for decrease (spending less = good)
+    ctx.fillStyle = monthlyChange.direction === 'up' ? '#ef4444' : '#10b981';
+    
+    const arrow = monthlyChange.direction === 'up' ? '▲' : '▼';
+    ctx.fillText(`${arrow} ${monthlyChange.percent}%`, centerX, centerY + 40);
+    
+    // Optional: Show dollar change on a second line
+    if (Math.abs(monthlyChange.dollarChange) >= 10) {
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        const sign = monthlyChange.dollarChange > 0 ? '+' : '';
+        ctx.fillText(`${sign}$${monthlyChange.dollarChange.toFixed(0)} vs last month`, centerX, centerY + 54);
     }
-}, [categoryData, displayedMonthly]);
+}
+    }
+}, [categoryData, displayedMonthly, monthlyChange]);
+
 
         //trend chart drawing section 
 useEffect(() => {
     if (trendChartRef.current && trendData.length > 0) {
         const canvas = trendChartRef.current;
         const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        const padding = 70; 
+        
+        // Better rendering quality
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        
+        const width = rect.width;
+        const height = rect.height;
+        const padding = 80;
+        
+        // Check if this is first-time user data (all values very similar)
+        const isFirstMonth = monthlyChange.isFirstMonth;
+        
+        // If first month, add a subtle indicator
+        if (isFirstMonth) {
+            ctx.fillStyle = '#6366f1';
+            ctx.font = '600 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('📊 Building your history...', width / 2, 30);
+        }
         const chartWidth = width - padding * 2;
         const chartHeight = height - padding * 2;
 
@@ -532,7 +654,7 @@ for (let i = 0; i <= 4; i++) {
         displayValue = `$${Math.round(value)}`;
     }
     
-    ctx.fillText(displayValue, padding - 15, y);
+    ctx.fillText(displayValue, padding - 18, y);
 }
 
         // ENHANCED: Draw X-axis labels with current month highlighted
@@ -573,7 +695,7 @@ useEffect(() => {
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         
-        const padding = 70;
+        const padding = 80;
         const chartWidth = canvas.width - padding * 2;
         const pointWidth = chartWidth / (trendData.length - 1);
         
@@ -709,14 +831,21 @@ useEffect(() => {
                         </span>
                     </div>
                     <p className="text-base text-slate-600">
-                        You're spending <span className="font-bold text-indigo-900">${displayedMonthly.toFixed(2)}/month</span> on{' '}
-                        <span className="font-bold text-indigo-900">{activeCount}</span> subscriptions
-                    </p>
+    You're spending <span className="font-bold text-indigo-900">${displayedMonthly.toFixed(2)}/month</span> on{' '}
+    <span className="font-bold text-indigo-900">{activeCount}</span> subscription{activeCount !== 1 ? 's' : ''}
+    {monthlyChange.isFirstMonth ? (
+        <span className="text-indigo-600"> • Starting your tracking journey!</span>
+    ) : monthlyChange.direction === 'up' ? (
+        <span className="text-red-600"> • Up {monthlyChange.percent}% from last month</span>
+    ) : monthlyChange.direction === 'down' ? (
+        <span className="text-green-600"> • Down {monthlyChange.percent}% from last month 🎉</span>
+    ) : null}
+</p>
                 </div>
 
                 {/* PROBLEMS DETECTED CARD */}
                 {problems.length > 0 && (
-                    <div className="mb-8 animate-fade-in-up">
+                    <div className="mb-10 animate-fade-in-up">
                         <div className="bg-yellow-50 rounded-3xl p-6 border-2 border-yellow-200">
                             <h3 className="text-lg font-black text-yellow-900 mb-4 flex items-center gap-2">
                                 <span>🚨</span>
@@ -744,7 +873,7 @@ useEffect(() => {
 
                 {/* URGENT TRIAL ALERTS (COMPACT) */}
                 {urgentTrials.length > 0 && (
-                    <div className="mb-8 space-y-4">
+                    <div className="mb-10 space-y-5">
                         {urgentTrials.slice(0, 2).map((trial, index) => {
                             const daysLeft = getDaysRemaining(trial.trial_end_date);
                             return (
@@ -818,7 +947,7 @@ useEffect(() => {
                 )}
 
                 {/* MAIN GRID - Charts + Insights */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-10">
                     {/* LEFT: Category Breakdown Chart */}
                      <div className="lg:col-span-2 animate-fade-in-up" style={{animationDelay: '200ms'}}>
                          <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#1e3a8a] shadow-2xl">
@@ -840,7 +969,7 @@ useEffect(() => {
             )}
             <canvas ref={chartRef} width="300" height="300" style={{filter: 'drop-shadow(0 5px 15px rgba(153, 252, 250, 0.2))'}}></canvas>
                                     </div>
-<div className="flex-1 w-full space-y-3">
+<div className="flex-1 w-full space-y-3.5">
     {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount], index) => {
         const catColor = categoryColors[category];
         const percentage = ((amount / totalMonthly) * 100).toFixed(0);
@@ -848,7 +977,7 @@ useEffect(() => {
         return (
             <div 
                 key={category}
-                className="group relative bg-white/20 backdrop-blur-lg p-5 rounded-2xl hover-lift border border-white/40 transition-all duration-300 shadow-lg"
+                className="group relative bg-white/20 backdrop-blur-lg p-6 rounded-2xl hover-lift border border-white/40 transition-all duration-300 shadow-lg"
                 style={{
                     animationDelay: `${index * 100}ms`,
                     animation: 'fadeInUp 0.6s ease-out forwards'
