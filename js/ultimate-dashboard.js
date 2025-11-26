@@ -1,5 +1,5 @@
-// Ultimate Dashboard Component - REFINED VERSION
-// Compact banners, Problems Detected card, refined charts
+// Ultimate Dashboard Component - FINAL PRODUCTION VERSION
+// Premium quality matching Rocket Money standards
 (function() {
     const { useState, useEffect, useRef } = React;
 
@@ -56,18 +56,19 @@
             categoryData[sub.category] = (categoryData[sub.category] || 0) + monthly;
         });
 
+        // REFINED COLOR PALETTE - More sophisticated
         const categoryColors = {
-            'Streaming': { color: '#9333ea', icon: '🎬' },
-            'Software': { color: '#3b82f6', icon: '💻' },
-            'Gaming': { color: '#10b981', icon: '🎮' },
-            'Fitness': { color: '#f59e0b', icon: '💪' },
-            'News': { color: '#ef4444', icon: '📰' },
-            'Music': { color: '#ec4899', icon: '🎵' },
-            'Cloud Storage': { color: '#06b6d4', icon: '☁️' },
-            'Other': { color: '#6b7280', icon: '📦' }
+            'Streaming': { color: '#8B5CF6', light: '#A78BFA', icon: '🎬' },
+            'Software': { color: '#3B82F6', light: '#60A5FA', icon: '💻' },
+            'Gaming': { color: '#10B981', light: '#34D399', icon: '🎮' },
+            'Fitness': { color: '#F59E0B', light: '#FBBF24', icon: '💪' },
+            'News': { color: '#EF4444', light: '#F87171', icon: '📰' },
+            'Music': { color: '#EC4899', light: '#F472B6', icon: '🎵' },
+            'Cloud Storage': { color: '#06B6D4', light: '#22D3EE', icon: '☁️' },
+            'Other': { color: '#6B7280', light: '#9CA3AF', icon: '📦' }
         };
 
-        // Generate mock 12-month trend data
+        // Generate trend data
         const generateTrendData = () => {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const currentMonth = new Date().getMonth();
@@ -86,7 +87,7 @@
 
         const trendData = generateTrendData();
 
-        // Get upcoming bills (next 7 days)
+        // Get upcoming bills
         const getUpcomingBills = () => {
             const today = new Date();
             const upcoming = subscriptions
@@ -103,7 +104,7 @@
 
         const upcomingBills = getUpcomingBills();
 
-        // Get top 5 most expensive
+        // Top 5 expensive
         const topExpensive = [...subscriptions]
             .sort((a, b) => {
                 const aMonthly = calculateMonthlyEquivalent(parseFloat(a.cost), a.billing_cycle);
@@ -112,11 +113,10 @@
             })
             .slice(0, 5);
 
-        // PROBLEMS DETECTED
+        // Problems detection
         const generateProblems = () => {
             const problems = [];
             
-            // Urgent trials
             if (urgentTrials.length > 0) {
                 problems.push({
                     icon: '⏰',
@@ -126,7 +126,6 @@
                 });
             }
             
-            // Budget overrun
             if (monthlyBudget && totalMonthly > monthlyBudget) {
                 const overage = totalMonthly - monthlyBudget;
                 problems.push({
@@ -137,7 +136,6 @@
                 });
             }
             
-            // Unused subscriptions (mock)
             const potentiallyUnused = subscriptions.filter(sub => 
                 sub.last_used && getDaysRemaining(sub.last_used) < -60
             );
@@ -159,7 +157,6 @@
         const generateInsights = () => {
             const insights = [];
             
-            // Savings achievement
             if (cancelledSubscriptions.length > 0) {
                 const totalSaved = cancelledSubscriptions.reduce((sum, sub) => 
                     sum + calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle), 0
@@ -172,7 +169,6 @@
                 });
             }
             
-            // Category concentration
             const topCategory = Object.entries(categoryData).sort((a, b) => b[1] - a[1])[0];
             if (topCategory) {
                 const percent = ((topCategory[1] / totalMonthly) * 100).toFixed(0);
@@ -191,292 +187,201 @@
 
         const insights = generateInsights();
 
-        // Recent activity (mock)
+        // Recent activity
         const recentActivity = [
             { type: 'renewed', name: subscriptions[0]?.name || 'Netflix', amount: 15.99, time: '2 hours ago', icon: '🔵' },
             { type: 'added', name: subscriptions[1]?.name || 'Spotify', amount: 9.99, time: '1 day ago', icon: '🟢' },
             { type: 'trial_started', name: subscriptions[2]?.name || 'Adobe', amount: 0, time: '3 days ago', icon: '🟡' }
         ].slice(0, Math.min(subscriptions.length, 3));
 
-        // In ultimate-dashboard.js, find the donut chart drawing (around line 180)
-// Replace the entire useEffect for chartRef:
+        // REFINED DONUT CHART - Premium quality
+        useEffect(() => {
+            if (chartRef.current && Object.keys(categoryData).length > 0) {
+                const canvas = chartRef.current;
+                const ctx = canvas.getContext('2d');
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const outerRadius = 135;
+                const innerRadius = 85;
 
-useEffect(() => {
-    if (chartRef.current && Object.keys(categoryData).length > 0) {
-        const canvas = chartRef.current;
-        const ctx = canvas.getContext('2d');
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const outerRadius = 140;
-        const innerRadius = 90; // Thicker donut
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const total = Object.values(categoryData).reduce((sum, val) => sum + val, 0);
+                let startAngle = -Math.PI / 2;
 
-        const total = Object.values(categoryData).reduce((sum, val) => sum + val, 0);
-
-        // ENHANCED: Brand-aligned colors with better contrast
-        const enhancedColors = {
-            'Streaming': { color: '#9333ea', light: '#c084fc' },
-            'Software': { color: '#3b82f6', light: '#60a5fa' },
-            'Gaming': { color: '#10b981', light: '#34d399' },
-            'Fitness': { color: '#f59e0b', light: '#fbbf24' },
-            'News': { color: '#ef4444', light: '#f87171' },
-            'Music': { color: '#ec4899', light: '#f472b6' },
-            'Cloud Storage': { color: '#06b6d4', light: '#22d3ee' },
-            'Other': { color: '#6b7280', light: '#9ca3af' }
-        };
-
-        let startAngle = -Math.PI / 2;
-
-        // Draw segments with subtle shadow
-        Object.entries(categoryData).forEach(([category, amount]) => {
-            const sliceAngle = (amount / total) * 2 * Math.PI;
-            const colors = enhancedColors[category] || { color: '#6b7280', light: '#9ca3af' };
-            
-            // Subtle shadow (FIXED - reduced from 15 to 6)
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = colors.color + '30';
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 2;
-            
-            // Draw outer arc
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, outerRadius, startAngle, startAngle + sliceAngle);
-            ctx.arc(centerX, centerY, innerRadius, startAngle + sliceAngle, startAngle, true);
-            ctx.closePath();
-            
-            // Gradient fill for depth
-            const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
-            gradient.addColorStop(0, colors.light);
-            gradient.addColorStop(1, colors.color);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            
-            // Clean edges
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            startAngle += sliceAngle;
-        });
-
-        // ENHANCED: Premium center circle with subtle gradient
-        const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, innerRadius - 5);
-        centerGradient.addColorStop(0, '#ffffff');
-        centerGradient.addColorStop(1, '#f8fafc');
-        
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, innerRadius - 5, 0, 2 * Math.PI);
-        ctx.fillStyle = centerGradient;
-        ctx.fill();
-        
-        // Elegant border
-        ctx.strokeStyle = 'rgba(76, 52, 245, 0.15)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // ENHANCED: Hierarchical center text
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Currency symbol
-        ctx.fillStyle = '#4C34F5';
-        ctx.font = '600 20px Inter, sans-serif';
-        ctx.fillText('$', centerX - 35, centerY - 12);
-        
-        // Amount
-        ctx.font = '900 42px Inter, sans-serif';
-        ctx.fillText(displayedMonthly.toFixed(0), centerX + 15, centerY - 12);
-        
-        // Label
-        ctx.font = '600 14px Inter, sans-serif';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText('per month', centerX, centerY + 22);
-        
-        // Subtle percentage indicator
-        ctx.font = '700 11px Inter, sans-serif';
-        ctx.fillStyle = '#10b981';
-        ctx.fillText('â–² 4.2%', centerX, centerY + 40);
-    }
-}, [categoryData, displayedMonthly]);
-
-        //trend chart drawing section 
-useEffect(() => {
-    if (trendChartRef.current && trendData.length > 0) {
-        const canvas = trendChartRef.current;
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        const padding = 60; // Increased from 40 for better spacing
-        const chartWidth = width - padding * 2;
-        const chartHeight = height - padding * 2;
-
-        ctx.clearRect(0, 0, width, height);
-
-        const maxValue = Math.max(...trendData.map(d => d.value));
-        const minValue = Math.min(...trendData.map(d => d.value)) * 0.9;
-        const valueRange = maxValue - minValue;
-
-        // ENHANCED: Draw grid with better visibility
-        ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)'; // Increased opacity
-        ctx.lineWidth = 1;
-        ctx.setLineDash([5, 5]); // Dashed lines
-        
-        for (let i = 0; i <= 4; i++) {
-            const y = padding + (chartHeight / 4) * i;
-            ctx.beginPath();
-            ctx.moveTo(padding, y);
-            ctx.lineTo(width - padding, y);
-            ctx.stroke();
-        }
-        ctx.setLineDash([]); // Reset
-
-        // ENHANCED: Draw gradient area fill with brand colors
-        const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-        gradient.addColorStop(0, 'rgba(76, 52, 245, 0.15)'); // Primary color
-        gradient.addColorStop(0.5, 'rgba(76, 52, 245, 0.08)');
-        gradient.addColorStop(1, 'rgba(76, 52, 245, 0)');
-        
-        ctx.beginPath();
-        trendData.forEach((point, index) => {
-            const x = padding + (chartWidth / (trendData.length - 1)) * index;
-            const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
-            
-            if (index === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        });
-        ctx.lineTo(width - padding, height - padding);
-        ctx.lineTo(padding, height - padding);
-        ctx.closePath();
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // ENHANCED: Draw line with gradient stroke
-        const lineGradient = ctx.createLinearGradient(padding, 0, width - padding, 0);
-        lineGradient.addColorStop(0, '#4C34F5'); // Primary
-        lineGradient.addColorStop(0.5, '#6B54FF'); // Primary-light
-        lineGradient.addColorStop(1, '#00B6C9'); // Secondary
-        
-        ctx.beginPath();
-        ctx.strokeStyle = lineGradient;
-        ctx.lineWidth = 4; // Thicker line
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.shadowColor = 'rgba(76, 52, 245, 0.3)';
-        ctx.shadowBlur = 8;
-
-        trendData.forEach((point, index) => {
-            const x = padding + (chartWidth / (trendData.length - 1)) * index;
-            const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
-            
-            if (index === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        });
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // ENHANCED: Draw premium points with ring effect
-        trendData.forEach((point, index) => {
-            const x = padding + (chartWidth / (trendData.length - 1)) * index;
-            const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
-            
-            // Outer ring
-            ctx.beginPath();
-            ctx.arc(x, y, 8, 0, 2 * Math.PI);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-            ctx.strokeStyle = index === trendData.length - 1 ? '#4C34F5' : '#6B54FF';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Inner dot
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, 2 * Math.PI);
-            ctx.fillStyle = index === trendData.length - 1 ? '#4C34F5' : '#6B54FF';
-            ctx.fill();
-        });
-
-        // ENHANCED: Draw Y-axis labels with better formatting
-        ctx.fillStyle = '#64748b';
-        ctx.font = '700 13px Inter, sans-serif'; // Bolder
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        
-        for (let i = 0; i <= 4; i++) {
-            const value = maxValue - (valueRange / 4) * i;
-            const y = padding + (chartHeight / 4) * i;
-            ctx.fillText(`$${Math.round(value).toLocaleString()}`, padding - 15, y);
-        }
-
-        // ENHANCED: Draw X-axis labels with current month highlighted
-        ctx.font = '600 13px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        
-        trendData.forEach((point, index) => {
-            const x = padding + (chartWidth / (trendData.length - 1)) * index;
-            const isCurrentMonth = index === trendData.length - 1;
-            
-            if (index % 2 === 0 || isCurrentMonth) {
-                // Background pill for current month
-                if (isCurrentMonth) {
-                    ctx.fillStyle = '#4C34F5';
+                // Draw segments
+                Object.entries(categoryData).forEach(([category, amount]) => {
+                    const sliceAngle = (amount / total) * 2 * Math.PI;
+                    const colors = categoryColors[category] || { color: '#6B7280', light: '#9CA3AF' };
+                    
+                    // Minimal shadow
+                    ctx.shadowBlur = 4;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+                    ctx.shadowOffsetY = 2;
+                    
                     ctx.beginPath();
-                    ctx.roundRect(x - 25, height - 35, 50, 24, 12);
+                    ctx.arc(centerX, centerY, outerRadius, startAngle, startAngle + sliceAngle);
+                    ctx.arc(centerX, centerY, innerRadius, startAngle + sliceAngle, startAngle, true);
+                    ctx.closePath();
+                    
+                    // Subtle gradient
+                    const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+                    gradient.addColorStop(0, colors.light);
+                    gradient.addColorStop(1, colors.color);
+                    ctx.fillStyle = gradient;
                     ctx.fill();
-                    ctx.fillStyle = '#ffffff';
-                } else {
-                    ctx.fillStyle = '#64748b';
-                }
-                
-                ctx.fillText(point.month, x, height - 23);
-            }
-        });
-    }
-}, [trendData]);
+                    
+                    // Clean white borders
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                    
+                    startAngle += sliceAngle;
+                });
 
-        // Quick action cards
-        const actionCards = [
-            {
-                id: 'scan-email',
-                icon: '📧',
-                title: 'Scan Emails',
-                description: 'Auto-detect',
-                gradient: 'from-red-500 to-pink-500',
-                priority: true,
-                onClick: onScanEmail
-            },
-            {
-                id: 'add',
-                icon: '➕',
-                title: 'Add New',
-                description: 'Manual entry',
-                gradient: 'from-blue-500 to-cyan-500',
-                onClick: onAddNew
-            },
-            {
-                id: 'scan-receipt',
-                icon: '📸',
-                title: 'Scan Receipt',
-                description: 'OCR from photo',
-                gradient: 'from-purple-500 to-pink-500',
-                onClick: onScanReceipt
-            },
-            {
-                id: 'bank',
-                icon: '🏦',
-                title: 'Connect Bank',
-                description: 'Auto-sync',
-                gradient: 'from-green-500 to-emerald-500',
-                onClick: onConnectBank
+                // Premium center circle
+                const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, innerRadius - 5);
+                centerGradient.addColorStop(0, '#ffffff');
+                centerGradient.addColorStop(1, '#fafbfc');
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, innerRadius - 5, 0, 2 * Math.PI);
+                ctx.fillStyle = centerGradient;
+                ctx.fill();
+                
+                ctx.strokeStyle = 'rgba(76, 52, 245, 0.12)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Center text - refined
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Amount
+                ctx.font = '900 38px Inter, sans-serif';
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText(`$${displayedMonthly.toFixed(0)}`, centerX, centerY - 8);
+                
+                // Label
+                ctx.font = '600 13px Inter, sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText('per month', centerX, centerY + 18);
             }
+        }, [categoryData, displayedMonthly]);
+
+        // REFINED TREND CHART - Clean & professional
+        useEffect(() => {
+            if (trendChartRef.current && trendData.length > 0) {
+                const canvas = trendChartRef.current;
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+                const padding = 50;
+                const chartWidth = width - padding * 2;
+                const chartHeight = height - padding * 2;
+
+                ctx.clearRect(0, 0, width, height);
+
+                const maxValue = Math.max(...trendData.map(d => d.value));
+                const minValue = Math.min(...trendData.map(d => d.value)) * 0.92;
+                const valueRange = maxValue - minValue;
+
+                // Subtle grid
+                ctx.strokeStyle = 'rgba(226, 232, 240, 0.6)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding + (chartHeight / 4) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(width - padding, y);
+                    ctx.stroke();
+                }
+
+                // Gradient fill
+                const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+                gradient.addColorStop(0, 'rgba(76, 52, 245, 0.12)');
+                gradient.addColorStop(1, 'rgba(76, 52, 245, 0)');
+                
+                ctx.beginPath();
+                trendData.forEach((point, index) => {
+                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                    const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+                    
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.lineTo(width - padding, height - padding);
+                ctx.lineTo(padding, height - padding);
+                ctx.closePath();
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Line
+                ctx.beginPath();
+                ctx.strokeStyle = '#4C34F5';
+                ctx.lineWidth = 3;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+
+                trendData.forEach((point, index) => {
+                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                    const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+                    
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+
+                // Points
+                trendData.forEach((point, index) => {
+                    const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                    const y = padding + chartHeight - ((point.value - minValue) / valueRange) * chartHeight;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.strokeStyle = '#4C34F5';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                });
+
+                // Y-axis labels
+                ctx.fillStyle = '#64748b';
+                ctx.font = '600 12px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                
+                for (let i = 0; i <= 4; i++) {
+                    const value = maxValue - (valueRange / 4) * i;
+                    const y = padding + (chartHeight / 4) * i;
+                    ctx.fillText(`$${Math.round(value).toLocaleString()}`, padding - 12, y + 4);
+                }
+
+                // X-axis labels
+                ctx.textAlign = 'center';
+                trendData.forEach((point, index) => {
+                    if (index % 2 === 0) {
+                        const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                        ctx.fillText(point.month, x, height - 25);
+                    }
+                });
+
+                // Current month indicator
+                const lastX = padding + chartWidth;
+                const currentMonth = trendData[trendData.length - 1].month;
+                ctx.fillStyle = '#4C34F5';
+                ctx.font = '700 12px Inter, sans-serif';
+                ctx.fillText(currentMonth, lastX, height - 25);
+            }
+        }, [trendData]);
+
+        // Action cards
+        const actionCards = [
+            { id: 'scan-email', icon: '📧', title: 'Scan Emails', description: 'Auto-detect', gradient: 'from-orange-500 to-pink-500', priority: true, onClick: onScanEmail },
+            { id: 'add', icon: '➕', title: 'Add New', description: 'Manual entry', gradient: 'from-blue-500 to-cyan-500', onClick: onAddNew },
+            { id: 'scan-receipt', icon: '📸', title: 'Scan Receipt', description: 'OCR from photo', gradient: 'from-purple-500 to-pink-500', onClick: onScanReceipt },
+            { id: 'bank', icon: '🏦', title: 'Connect Bank', description: 'Auto-sync', gradient: 'from-green-500 to-emerald-500', onClick: onConnectBank }
         ];
 
         const getDayLabel = (days) => {
@@ -488,99 +393,48 @@ useEffect(() => {
         return (
             <div className="max-w-7xl mx-auto pb-12">
                 <style>{`
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    /* ENHANCED: Better card spacing */
-    .hover-lift {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .hover-lift:hover {
-        transform: translateY(-6px) scale(1.01); /* Added scale */
-        box-shadow: 0 20px 40px rgba(0, 9, 82, 0.15),
-                    0 8px 16px rgba(153, 252, 250, 0.1); /* Dual shadow */
-    }
-    
-    /* ENHANCED: Chart containers need more breathing room */
-    canvas {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-    }
-    
-    /* Better text rendering */
-    * {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-    }
-    
-    @keyframes shine {
-                to { transform: translateX(100%); }
-            }
-    
-    /* Compact headers with better typography */
-    .welcome-header {
-        padding: 16px 0 !important;
-        margin-bottom: 28px;
-    }
-    .welcome-header h1 {
-        font-size: 32px !important;
-        margin-bottom: 6px !important;
-        line-height: 1.3;
-        letter-spacing: -0.02em; /* Tighter tracking */
-    }
-    .welcome-header p {
-        font-size: 16px !important;
-        line-height: 1.6;
-        color: #64748b;
-    }
-`}</style>
+                    @keyframes fadeInUp {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out; }
+                    .hover-lift {
+                        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .hover-lift:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+                    }
+                    * {
+                        -webkit-font-smoothing: antialiased;
+                        -moz-osx-font-smoothing: grayscale;
+                    }
+                `}</style>
 
-                {/* COMPACT WELCOME HEADER (REDUCED 30-40%) */}
-                <div className="welcome-header animate-fade-in-up">
-                    <div className="flex items-baseline gap-3 mb-1">
-                        <h1 className="text-3xl font-black text-indigo-950">
-                            Welcome back, {formattedName}!
-                        </h1>
-                        <span 
-                            className="inline-block text-2xl" 
-                            style={{
-                                animation: 'wave 0.5s ease-in-out',
-                                transformOrigin: '70% 70%'
-                            }}
-                        >
-                            👋
-                        </span>
-                    </div>
+                {/* Compact welcome */}
+                <div className="mb-8" style={{paddingTop: '16px'}}>
+                    <h1 className="text-3xl font-black text-slate-900 mb-2" style={{letterSpacing: '-0.02em'}}>
+                        Welcome back, {formattedName}! 👋
+                    </h1>
                     <p className="text-base text-slate-600">
-                        You're spending <span className="font-bold text-indigo-900">${displayedMonthly.toFixed(2)}/month</span> on{' '}
-                        <span className="font-bold text-indigo-900">{activeCount}</span> subscriptions
+                        You're spending <span className="font-bold text-indigo-600">${displayedMonthly.toFixed(2)}/month</span> on{' '}
+                        <span className="font-bold text-indigo-600">{activeCount}</span> subscriptions
                     </p>
                 </div>
 
-                {/* PROBLEMS DETECTED CARD */}
+                {/* Problems */}
                 {problems.length > 0 && (
-                    <div className="mb-8 animate-fade-in-up">
-                        <div className="bg-yellow-50 rounded-3xl p-6 border-2 border-yellow-200">
-                            <h3 className="text-lg font-black text-yellow-900 mb-4 flex items-center gap-2">
-                                <span>🚨</span>
-                                Problems Detected
+                    <div className="mb-8">
+                        <div className="bg-amber-50 rounded-2xl p-5 border border-amber-200">
+                            <h3 className="text-base font-bold text-amber-900 mb-3 flex items-center gap-2">
+                                <span>⚠️</span> Issues Found
                             </h3>
-                            <div className="space-y-3">
-                                {problems.map((problem, i) => (
-                                    <div
-                                        key={i}
-                                        className="flex items-center gap-3 p-3 bg-white rounded-xl border border-yellow-100"
-                                    >
-                                        <span className="text-xl">{problem.icon}</span>
-                                        <p className="flex-1 font-semibold text-sm text-slate-800">{problem.text}</p>
-                                        {problem.action && (
-                                            <button className="text-xs font-bold text-yellow-700 hover:text-yellow-800 transition-colors">
-                                                {problem.action} →
-                                            </button>
-                                        )}
+                            <div className="space-y-2">
+                                {problems.map((p, i) => (
+                                    <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-xl">
+                                        <span className="text-lg">{p.icon}</span>
+                                        <p className="flex-1 text-sm font-medium text-slate-700">{p.text}</p>
+                                        {p.action && <button className="text-xs font-bold text-amber-700">{p.action} →</button>}
                                     </div>
                                 ))}
                             </div>
@@ -588,417 +442,174 @@ useEffect(() => {
                     </div>
                 )}
 
-                {/* URGENT TRIAL ALERTS (COMPACT) */}
-                {urgentTrials.length > 0 && (
-                    <div className="mb-8 space-y-4">
-                        {urgentTrials.slice(0, 2).map((trial, index) => {
-                            const daysLeft = getDaysRemaining(trial.trial_end_date);
-                            return (
-                                <div 
-                                    key={trial.id}
-                                    className="trial-alert relative overflow-hidden rounded-3xl p-5 border-2 hover-lift animate-fade-in-up"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%)',
-                                        borderColor: daysLeft === 0 ? '#dc2626' : '#f59e0b',
-                                        animationDelay: `${index * 100}ms`,
-                                        boxShadow: '0 10px 30px rgba(239, 68, 68, 0.15)'
-                                    }}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="text-3xl">{daysLeft === 0 ? '🚨' : '⏰'}</div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-black text-red-900">
-                                                    {trial.name} Trial Ending {daysLeft === 0 ? 'TODAY!' : `in ${daysLeft} day${daysLeft > 1 ? 's' : ''}!`}
-                                                </h3>
-                                                {daysLeft === 0 && (
-                                                    <span className="px-2 py-1 bg-red-600 text-white rounded-full text-xs font-bold animate-pulse">
-                                                        URGENT
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-sm text-red-800 mb-3">
-                                                Cancel now to avoid ${trial.cost} charge on {formatDate(trial.trial_end_date)}
-                                            </p>
-                                            <div className="flex gap-3">
-                                                <button className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-bold hover:shadow-xl transition-all text-sm">
-                                                    Cancel Trial Now
-                                                </button>
-                                                <button className="px-4 py-2 bg-white text-red-900 border-2 border-red-300 rounded-xl font-bold hover:bg-red-50 transition-all text-sm">
-                                                    Keep & Pay ${trial.cost}
-                                                </button>
-                                            </div>
-                                        </div>
+                {/* Trials */}
+                {urgentTrials.length > 0 && urgentTrials.slice(0, 1).map(trial => {
+                    const days = getDaysRemaining(trial.trial_end_date);
+                    return (
+                        <div key={trial.id} className="mb-8 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-5 border border-red-200">
+                            <div className="flex gap-4">
+                                <div className="text-3xl">{days === 0 ? '🚨' : '⏰'}</div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-black text-red-900 mb-1">
+                                        {trial.name} Trial Ending {days === 0 ? 'TODAY!' : `in ${days} day${days > 1 ? 's' : ''}!`}
+                                    </h3>
+                                    <p className="text-sm text-red-800 mb-3">Cancel to avoid ${trial.cost} charge</p>
+                                    <div className="flex gap-3">
+                                        <button className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700">Cancel Now</button>
+                                        <button className="px-4 py-2 bg-white border-2 border-red-300 text-red-900 rounded-xl text-sm font-bold hover:bg-red-50">Keep</button>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                )}
+                            </div>
+                        </div>
+                    );
+                })}
 
-                {/* SPENDING TREND CHART */}
+                {/* Trend chart */}
                 {subscriptions.length > 0 && (
-                    <div className="mb-8 animate-fade-in-up" style={{animationDelay: '100ms'}}>
-                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-slate-200">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-black text-indigo-950">📈 Spending Trend</h2>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-slate-600">Last 12 months</span>
-                                    <div className="flex items-center gap-1">
-                                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                        <span className="text-slate-500">Monthly spend</span>
-                                    </div>
-                                </div>
+                    <div className="mb-8">
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                            <div className="flex items-center justify-between mb-5">
+                                <h2 className="text-xl font-black text-slate-900">📈 Spending Trend</h2>
+                                <span className="text-sm text-slate-500">Last 12 months</span>
                             </div>
-                            <canvas ref={trendChartRef} width="900" height="250"></canvas>
+                            <canvas ref={trendChartRef} width="900" height="230"></canvas>
                         </div>
                     </div>
                 )}
 
-                {/* MAIN GRID - Charts + Insights */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-                    {/* LEFT: Category Breakdown Chart */}
-                    <div className="lg:col-span-2 animate-fade-in-up" style={{animationDelay: '200ms'}}>
-                        <div className="relative rounded-3xl p-10 overflow-hidden bg-gradient-to-br from-indigo-950 to-blue-900 shadow-2xl">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400 opacity-10 rounded-full blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400 opacity-10 rounded-full blur-3xl"></div>
-                            
-                            <h2 className="text-2xl font-black mb-8 text-white relative z-10">💰 Category Breakdown</h2>
-                            
+                {/* Main grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                    {/* Category breakdown */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-8 shadow-lg">
+                            <h2 className="text-xl font-black text-white mb-6">💰 Category Breakdown</h2>
                             {Object.keys(categoryData).length > 0 ? (
-                                <div className="flex flex-col lg:flex-row items-center gap-8 relative z-10">
-                                    <div className="relative">
-                                        <canvas ref={chartRef} width="300" height="300" style={{filter: 'drop-shadow(0 5px 15px rgba(153, 252, 250, 0.2))'}}></canvas>
+                                <div className="flex flex-col lg:flex-row items-center gap-8">
+                                    <canvas ref={chartRef} width="280" height="280"></canvas>
+                                    <div className="flex-1 w-full space-y-3">
+                                        {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
+                                            const color = categoryColors[cat];
+                                            const pct = ((amt / totalMonthly) * 100).toFixed(0);
+                                            return (
+                                                <div key={cat} className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-2xl">{color?.icon}</span>
+                                                            <div>
+                                                                <p className="font-bold text-white">{cat}</p>
+                                                                <p className="text-xs text-cyan-200">{pct}% of total</p>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xl font-black text-white">${amt.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-<div className="flex-1 w-full space-y-3">
-    {Object.entries(categoryData).sort((a, b) => b[1] - a[1]).map(([category, amount], index) => {
-        const catColor = categoryColors[category];
-        const percentage = ((amount / totalMonthly) * 100).toFixed(0);
-        
-        return (
-            <div 
-                key={category}
-                className="group relative bg-white/10 backdrop-blur-lg p-5 rounded-2xl hover-lift border border-white/20 transition-all duration-300"
-                style={{
-                    animationDelay: `${index * 100}ms`,
-                    animation: 'fadeInUp 0.6s ease-out forwards'
-                }}
-            >
-                {/* Progress bar background */}
-                <div 
-                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{
-                        background: `linear-gradient(90deg, ${catColor?.color}15 0%, transparent ${percentage}%)`
-                    }}
-                />
-                
-                <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        {/* Icon with glow effect */}
-                        <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110"
-                            style={{
-                                background: `linear-gradient(135deg, ${catColor?.color}20 0%, ${catColor?.color}10 100%)`,
-                                boxShadow: `0 4px 12px ${catColor?.color}20`
-                            }}
-                        >
-                            {catColor?.icon}
-                        </div>
-                        
-                        <div>
-                            <span className="font-bold text-white text-lg block mb-1">{category}</span>
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-24 bg-white/20 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full rounded-full transition-all duration-1000"
-                                        style={{
-                                            width: `${percentage}%`,
-                                            background: catColor?.color
-                                        }}
-                                    />
-                                </div>
-                                <span className="text-xs text-cyan-300 font-semibold">{percentage}%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="text-right">
-                        <p className="font-black text-2xl text-white group-hover:text-cyan-300 transition-colors">
-                            ${amount.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-cyan-200 font-semibold mt-1">
-                            ${(amount / 30).toFixed(2)}/day
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    })}
-</div>
                                 </div>
                             ) : (
-                                <div className="text-center py-16 relative z-10">
-                                    <div className="text-6xl mb-4">📊</div>
-                                    <p className="text-white text-xl font-bold mb-2">No spending data yet</p>
-                                    <p className="text-cyan-200 mb-6">Add your first subscription to see spending trends</p>
-                                    <button 
-                                        onClick={onAddNew}
-                                        className="px-6 py-3 bg-cyan-400 text-indigo-950 rounded-xl font-bold hover:bg-cyan-300 transition-all"
-                                    >
-                                        ➕ Add Your First Subscription
+                                <div className="text-center py-16">
+                                    <p className="text-white text-lg font-bold mb-4">No data yet</p>
+                                    <button onClick={onAddNew} className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-gray-50">
+                                        Add First Subscription
                                     </button>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* RIGHT: Smart Insights + Top Expenses */}
-                    <div className="space-y-6 animate-fade-in-up" style={{animationDelay: '300ms'}}>
-                        {/* Smart Insights */}
+                    {/* Right column */}
+                    <div className="space-y-6">
+                        {/* Insights */}
                         {insights.length > 0 && (
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-6 border-2 border-green-200 shadow-lg">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="text-2xl">💡</span>
-                                    <h3 className="text-xl font-black text-green-900">Smart Insights</h3>
-                                </div>
-                                <div className="space-y-3">
-                                    {insights.map((insight, index) => (
-                                        <div 
-                                            key={index}
-                                            className="p-4 bg-white rounded-2xl border border-green-100"
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <span className="text-xl flex-shrink-0">{insight.icon}</span>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-slate-800 mb-2">{insight.text}</p>
-                                                    {insight.action && (
-                                                        <button className="text-xs font-bold text-green-600 hover:text-green-700">
-                                                            {insight.action} →
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-200">
+                                <h3 className="text-base font-black text-green-900 mb-3 flex items-center gap-2">
+                                    <span>💡</span> Insights
+                                </h3>
+                                <div className="space-y-2">
+                                    {insights.map((ins, i) => (
+                                        <div key={i} className="p-3 bg-white rounded-xl">
+                                            <p className="text-sm font-medium text-slate-700">{ins.text}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* Top 5 Most Expensive */}
+                        {/* Top expenses */}
                         {topExpensive.length > 0 && (
-                            <div className="bg-white rounded-3xl p-6 border-2 border-slate-200 shadow-lg">
-                                <h3 className="text-lg font-black text-indigo-950 mb-4">💸 Top Expenses</h3>
-                                <div className="space-y-3">
-                                    {topExpensive.map((sub, index) => {
-                                        const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+                            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                                <h3 className="text-base font-black text-slate-900 mb-3">💸 Top Expenses</h3>
+                                <div className="space-y-2">
+                                    {topExpensive.map((sub, i) => {
+                                        const cost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
                                         return (
                                             <div key={sub.id} className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-sm">
-                                                    {index + 1}
+                                                <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">
+                                                    {i + 1}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-bold text-sm text-slate-800 truncate">{sub.name}</p>
+                                                    <p className="font-semibold text-sm text-slate-900 truncate">{sub.name}</p>
                                                     <p className="text-xs text-slate-500">{sub.category}</p>
                                                 </div>
-                                                <p className="font-black text-indigo-900">${monthlyCost.toFixed(2)}</p>
+                                                <p className="font-bold text-slate-900">${cost.toFixed(2)}</p>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
                         )}
-
-                        {/* Budget Progress (if set) */}
-                        {monthlyBudget && (
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border-2 border-blue-200 shadow-lg">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="text-2xl">🎯</span>
-                                    <h3 className="text-lg font-black text-blue-900">Budget Goal</h3>
-                                </div>
-                                <div className="mb-4">
-                                    <div className="flex items-baseline justify-between mb-2">
-                                        <span className="text-3xl font-black text-blue-900">
-                                            ${totalMonthly.toFixed(0)}
-                                        </span>
-                                        <span className="text-sm text-blue-700">
-                                            of ${monthlyBudget.toFixed(0)}
-                                        </span>
-                                    </div>
-                                    <div className="h-3 bg-white rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000"
-                                            style={{ width: `${Math.min((totalMonthly / monthlyBudget) * 100, 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                                <p className="text-xs text-blue-700">
-                                    {totalMonthly > monthlyBudget ? 
-                                        `$${(totalMonthly - monthlyBudget).toFixed(2)} over budget` :
-                                        `$${(monthlyBudget - totalMonthly).toFixed(2)} remaining`
-                                    }
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                {/* UPCOMING BILLS TIMELINE */}
-                {upcomingBills.length > 0 && (
-                    <div className="mb-10 animate-fade-in-up" style={{animationDelay: '400ms'}}>
-                        <h2 className="text-2xl font-black mb-6 text-indigo-950">📅 Upcoming Bills (Next 7 Days)</h2>
-                        <div className="bg-white rounded-3xl p-8 border-2 border-slate-200 shadow-lg">
-                            <div className="space-y-4">
-                                {upcomingBills.map((bill) => {
-                                    const monthlyCost = calculateMonthlyEquivalent(parseFloat(bill.cost), bill.billing_cycle);
-                                    return (
-                                        <div key={bill.id} className="flex items-center gap-6 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
-                                            <div className="flex-shrink-0 w-16 text-center">
-                                                <p className="text-2xl font-black text-indigo-900">
-                                                    {new Date(bill.next_billing_date).getDate()}
-                                                </p>
-                                                <p className="text-xs font-semibold text-slate-500 uppercase">
-                                                    {new Date(bill.next_billing_date).toLocaleDateString('en-US', { month: 'short' })}
-                                                </p>
-                                            </div>
-                                            <div className="h-12 w-px bg-slate-200"></div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-slate-800">{bill.name}</p>
-                                                <p className="text-sm text-slate-500">{getDayLabel(bill.daysUntil)}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-black text-indigo-900">${monthlyCost.toFixed(2)}</p>
-                                                <p className="text-xs text-slate-500">{bill.billing_cycle}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* QUICK ACTIONS */}
+                {/* Actions */}
                 <div className="mb-10">
-                    <h2 className="text-2xl font-black mb-6 text-indigo-950">⚡ Quick Actions</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {actionCards.map((card, index) => (
-                            // In the Quick Actions section, enhance the buttons:
-<button
-    key={card.id}
-    onClick={card.onClick}
-    className={`group relative overflow-hidden bg-white rounded-3xl p-8 text-left border-2 transition-all duration-300 ${
-        card.priority 
-            ? 'border-red-300 shadow-lg shadow-red-100 hover:shadow-xl hover:shadow-red-200' 
-            : 'border-slate-200 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-100'
-    }`}
-    style={{
-        animationDelay: `${index * 100}ms`,
-        animation: 'fadeInUp 0.6s ease-out forwards'
-    }}
->
-    {/* Animated gradient background */}
-    <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-all duration-500 group-hover:scale-110`}></div>
-    
-    {/* Shine effect on hover */}
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-         style={{
-             background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-             transform: 'translateX(-100%)',
-             animation: 'shine 1.5s ease-in-out infinite'
-         }}
-    />
-    
-    <div className="relative z-10">
-        <div className={`w-16 h-16 mb-5 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-4xl transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg group-hover:shadow-xl`}>
-            {card.icon}
-        </div>
-        <h3 className="font-black text-xl text-indigo-950 mb-2 group-hover:text-indigo-700 transition-colors">{card.title}</h3>
-        <p className="text-sm text-slate-600 mb-3">{card.description}</p>
-        {card.priority && (
-            <div className="flex items-center gap-2 text-xs font-bold text-red-600">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                Recommended
-            </div>
-        )}
-    </div>
-</button>
+                    <h2 className="text-xl font-black text-slate-900 mb-4">⚡ Quick Actions</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {actionCards.map((card, i) => (
+                            <button key={card.id} onClick={card.onClick} 
+                                className={`group bg-white rounded-2xl p-6 border-2 hover-lift text-left ${card.priority ? 'border-orange-300' : 'border-slate-200'}`}>
+                                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform`}>
+                                    {card.icon}
+                                </div>
+                                <h3 className="font-bold text-slate-900 mb-1">{card.title}</h3>
+                                <p className="text-sm text-slate-500">{card.description}</p>
+                                {card.priority && <p className="text-xs font-bold text-orange-600 mt-2">⭐ Recommended</p>}
+                            </button>
                         ))}
                     </div>
                 </div>
 
-                {/* RECENT ACTIVITY FEED */}
-                {recentActivity.length > 0 && (
-                    <div className="mb-10 animate-fade-in-up" style={{animationDelay: '500ms'}}>
-                        <h2 className="text-2xl font-black mb-6 text-indigo-950">🔔 Recent Activity</h2>
-                        <div className="bg-white rounded-3xl p-6 border-2 border-slate-200 shadow-lg">
-                            <div className="space-y-4">
-                                {recentActivity.map((activity, index) => (
-                                    <div key={index} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors">
-                                        <span className="text-3xl">{activity.icon}</span>
-                                        <div className="flex-1">
-                                            <p className="font-bold text-slate-800">
-                                                {activity.type === 'renewed' && `${activity.name} renewed`}
-                                                {activity.type === 'added' && `Added ${activity.name}`}
-                                                {activity.type === 'trial_started' && `Started ${activity.name} trial`}
-                                            </p>
-                                            <p className="text-sm text-slate-500">{activity.time}</p>
-                                        </div>
-                                        {activity.amount > 0 && (
-                                            <p className="font-black text-lg text-red-600">-${activity.amount}</p>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ALL SUBSCRIPTIONS GRID */}
+                {/* All subs grid */}
                 {subscriptions.length > 0 && (
                     <div>
-                        <h2 className="text-2xl font-black mb-6 text-indigo-950">📊 All Subscriptions</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {subscriptions.slice(0, 6).map((sub, index) => {
-                                const monthlyCost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
+                        <h2 className="text-xl font-black text-slate-900 mb-4">📊 All Subscriptions</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {subscriptions.slice(0, 6).map(sub => {
+                                const cost = calculateMonthlyEquivalent(parseFloat(sub.cost), sub.billing_cycle);
                                 return (
-                                    <div 
-                                        key={sub.id}
-                                        className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 hover-lift border-2 border-transparent hover:border-cyan-200"
-                                        style={{
-                                            animationDelay: `${index * 100}ms`,
-                                            animation: 'fadeInUp 0.6s ease-out forwards'
-                                        }}
-                                    >
-                                        <div className="flex items-start gap-4 mb-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-black text-white shadow-lg">
+                                    <div key={sub.id} className="bg-white rounded-2xl p-5 border border-slate-200 hover-lift">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-lg font-bold">
                                                 {sub.name.charAt(0)}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-bold text-base text-indigo-950 truncate">{sub.name}</h3>
-                                                <p className="text-sm text-slate-600">{sub.category}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-baseline justify-between mb-2">
-                                            <span className="text-2xl font-black text-indigo-950">${monthlyCost.toFixed(2)}</span>
-                                            <span className="text-sm text-slate-500">/month</span>
-                                        </div>
-                                        {sub.next_billing_date && (
-                                            <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                                                <p className="text-xs font-semibold text-slate-600 flex items-center gap-2">
-                                                    📅 Next: {formatDate(sub.next_billing_date)}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    // Expose to window
-    window.UltimateDashboard = EnhancedUltimateDashboard;
+                                                <p className="font-bold text-slate-900 truncate">{sub.name}</p>
+                                                <p className="text-sm text-slate-500">{sub.category}</p>
+                                             </div>
+                                         </div>
+                                       <p className="text-2xl font-black text-slate-900 mb-1">${cost.toFixed(2)}<span className="text-sm text-slate-500 font-normal">/mo</span></p>
+                                       {sub.next_billing_date && (
+                                       <p className="text-xs text-slate-500">Next: {formatDate(sub.next_billing_date)}</p>
+                                         )}
+                                     </div>
+                                     );
+                                 })}
+                             </div>
+                         </div>
+                     )}
+                 </div>
+            );
+        };
+window.UltimateDashboard = EnhancedUltimateDashboard;
 })();
